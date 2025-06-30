@@ -615,7 +615,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int infoSectionRow;
     private int affiliateRow;
     private int infoAffiliateRow;
-    private int actionButtonsRow;
+
     private int sendMessageRow;
     private int reportRow;
     private int reportReactionRow;
@@ -1006,10 +1006,79 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         private int currentColor;
         private Paint paint = new Paint();
+        private LinearLayout actionButtonsContainer;
 
         public TopView(Context context) {
             super(context);
             setWillNotDraw(false);
+            
+            // Create action buttons container
+            createActionButtons(context);
+        }
+        
+        private void createActionButtons(Context context) {
+            if (!myProfile && userId != getUserConfig().getClientUserId()) {
+                actionButtonsContainer = new LinearLayout(context);
+                actionButtonsContainer.setOrientation(LinearLayout.HORIZONTAL);
+                actionButtonsContainer.setGravity(Gravity.CENTER);
+                actionButtonsContainer.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
+                
+                // Semi-transparent background for visibility over profile picture
+                GradientDrawable background = new GradientDrawable();
+                background.setShape(GradientDrawable.RECTANGLE);
+                background.setColor(0x80000000); // Semi-transparent black
+                background.setCornerRadius(AndroidUtilities.dp(16));
+                actionButtonsContainer.setBackground(background);
+                
+                // Create buttons
+                LinearLayout messageButton = createActionButton(context, R.drawable.profile_newmsg, LocaleController.getString(R.string.SendMessage));
+                messageButton.setOnClickListener(v -> {
+                    if (userId != 0) {
+                        Bundle args = new Bundle();
+                        args.putLong("user_id", userId);
+                        if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+                            return;
+                        }
+                        ChatActivity chatActivity = new ChatActivity(args);
+                        presentFragment(chatActivity, true);
+                    }
+                });
+                
+                LinearLayout unmuteButton = createActionButton(context, R.drawable.msg_mute, LocaleController.getString(R.string.Unmute));
+                unmuteButton.setOnClickListener(v -> {
+                    long did = getDialogId();
+                    if (getMessagesController().isDialogMuted(did, 0)) {
+                        getNotificationsController().muteDialog(did, 0, false);
+                    } else {
+                        getNotificationsController().muteDialog(did, 0, true);
+                    }
+                });
+                
+                LinearLayout callButton = createActionButton(context, R.drawable.ic_call, LocaleController.getString(R.string.Call));
+                callButton.setOnClickListener(v -> {
+                    TLRPC.User user = getMessagesController().getUser(userId);
+                    if (user != null) {
+                        VoIPHelper.startCall(user, false, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+                    }
+                });
+                
+                LinearLayout videoButton = createActionButton(context, R.drawable.profile_video, LocaleController.getString(R.string.VideoCall));
+                videoButton.setOnClickListener(v -> {
+                    TLRPC.User user = getMessagesController().getUser(userId);
+                    if (user != null) {
+                        VoIPHelper.startCall(user, true, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+                    }
+                });
+                
+                // Add buttons to container
+                actionButtonsContainer.addView(messageButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, 0, 0, 8, 0));
+                actionButtonsContainer.addView(unmuteButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, 8, 0, 8, 0));
+                actionButtonsContainer.addView(callButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, 8, 0, 8, 0));
+                actionButtonsContainer.addView(videoButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, 8, 0, 0, 0));
+                
+                // Add container to TopView
+                addView(actionButtonsContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 20, 0, 20, 20));
+            }
         }
 
         @Override
@@ -6104,22 +6173,27 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         LinearLayout button = new LinearLayout(context);
         button.setOrientation(LinearLayout.VERTICAL);
         button.setGravity(Gravity.CENTER);
-        button.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8));
-        button.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 0));
+        button.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12));
+        
+        // Create ripple effect for overlay buttons
+        button.setBackground(Theme.createSelectorDrawable(0x33FFFFFF, 0));
         
         ImageView icon = new ImageView(context);
         icon.setImageResource(iconRes);
-        icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueIcon), PorterDuff.Mode.SRC_IN));
+        // Use white color for icons on overlay
+        icon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
         icon.setScaleType(ImageView.ScaleType.CENTER);
-        button.addView(icon, LayoutHelper.createLinear(24, 24, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 4));
+        button.addView(icon, LayoutHelper.createLinear(24, 24, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 6));
         
         TextView textView = new TextView(context);
         textView.setText(text);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-        textView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
+        // Use white color for text on overlay
+        textView.setTextColor(Color.WHITE);
         textView.setGravity(Gravity.CENTER);
         textView.setMaxLines(1);
         textView.setEllipsize(TextUtils.TruncateAt.END);
+        textView.setTypeface(AndroidUtilities.bold());
         button.addView(textView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
         
         return button;
@@ -9061,7 +9135,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         botPermissionLocation = -1;
         botPermissionsDivider = -1;
 
-        actionButtonsRow = -1;
+
         sendMessageRow = -1;
         reportRow = -1;
         reportReactionRow = -1;
@@ -9239,9 +9313,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 infoStartRow = rowCount;
                 infoHeaderRow = rowCount++;
-                if (!myProfile && userId != getUserConfig().getClientUserId()) {
-                    actionButtonsRow = rowCount++;
-                }
                 if (!isBot && (hasPhone || !hasInfo)) {
                     phoneRow = rowCount++;
                 }
@@ -11380,8 +11451,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 VIEW_TYPE_STARS_TEXT_CELL = 24,
                 VIEW_TYPE_BOT_APP = 25,
                 VIEW_TYPE_SHADOW_TEXT = 26,
-                VIEW_TYPE_COLORFUL_TEXT = 27,
-                VIEW_TYPE_ACTION_BUTTONS = 28;
+                VIEW_TYPE_COLORFUL_TEXT = 27;
 
         private Context mContext;
 
@@ -11643,63 +11713,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     view = frameLayout;
                     view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
-                case VIEW_TYPE_ACTION_BUTTONS:
-                    LinearLayout actionButtonsLayout = new LinearLayout(mContext);
-                    actionButtonsLayout.setOrientation(LinearLayout.HORIZONTAL);
-                    actionButtonsLayout.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(14), AndroidUtilities.dp(18), AndroidUtilities.dp(14));
-                    actionButtonsLayout.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
-                    
-                    // Message button
-                    LinearLayout messageButton = createActionButton(mContext, R.drawable.profile_newmsg, LocaleController.getString(R.string.SendMessage));
-                    messageButton.setOnClickListener(v -> {
-                        if (userId != 0) {
-                            Bundle args = new Bundle();
-                            args.putLong("user_id", userId);
-                            if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
-                                return;
-                            }
-                            ChatActivity chatActivity = new ChatActivity(args);
-                            presentFragment(chatActivity, true);
-                        }
-                    });
-                    
-                    // Unmute button  
-                    LinearLayout unmuteButton = createActionButton(mContext, R.drawable.msg_mute, LocaleController.getString(R.string.Unmute));
-                    unmuteButton.setOnClickListener(v -> {
-                        // Toggle mute/unmute functionality
-                        long did = getDialogId();
-                        if (getMessagesController().isDialogMuted(did, 0)) {
-                            getNotificationsController().muteDialog(did, 0, false);
-                        } else {
-                            getNotificationsController().muteDialog(did, 0, true);
-                        }
-                    });
-                    
-                    // Call button
-                    LinearLayout callButton = createActionButton(mContext, R.drawable.ic_call, LocaleController.getString(R.string.Call));
-                    callButton.setOnClickListener(v -> {
-                        TLRPC.User user = getMessagesController().getUser(userId);
-                        if (user != null) {
-                            VoIPHelper.startCall(user, false, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
-                        }
-                    });
-                    
-                    // Video call button
-                    LinearLayout videoButton = createActionButton(mContext, R.drawable.profile_video, LocaleController.getString(R.string.VideoCall));
-                    videoButton.setOnClickListener(v -> {
-                        TLRPC.User user = getMessagesController().getUser(userId);
-                        if (user != null) {
-                            VoIPHelper.startCall(user, true, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
-                        }
-                    });
-                    
-                    actionButtonsLayout.addView(messageButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-                    actionButtonsLayout.addView(unmuteButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-                    actionButtonsLayout.addView(callButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-                    actionButtonsLayout.addView(videoButton, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-                    
-                    view = actionButtonsLayout;
-                    break;
+
             }
             if (viewType != VIEW_TYPE_SHARED_MEDIA) {
                 view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
@@ -12598,8 +12612,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 return VIEW_TYPE_SHADOW_TEXT;
             } else if (position == affiliateRow) {
                 return VIEW_TYPE_COLORFUL_TEXT;
-            } else if (position == actionButtonsRow) {
-                return VIEW_TYPE_ACTION_BUTTONS;
             }
             return 0;
         }
