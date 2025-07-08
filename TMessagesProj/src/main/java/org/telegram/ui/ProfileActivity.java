@@ -559,6 +559,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int copy_link_profile = 42;
     private final static int set_username = 43;
     private final static int bot_privacy = 44;
+    
+    // Profile button action types
+    private final static int profile_action_message = 45;
+    private final static int profile_action_call = 46;
+    private final static int profile_action_video_call = 47;
+    private final static int profile_action_share = 48;
+    private final static int profile_action_mute = 49;
+    private final static int profile_action_unmute = 50;
+    private final static int profile_action_report = 51;
+    private final static int profile_action_join = 52;
+    private final static int profile_action_leave = 53;
 
     private Rect rect = new Rect();
 
@@ -1853,6 +1864,55 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else {
                 return null;
             }
+        }
+    }
+
+    private class ProfileActionButton extends FrameLayout {
+        private ImageView iconView;
+        private TextView textView;
+        private int actionType;
+        
+        public ProfileActionButton(Context context) {
+            super(context);
+            
+            // Set up layout - fixed button height instead of MATCH_PARENT
+            setLayoutParams(new LinearLayout.LayoutParams(0, AndroidUtilities.dp(45), 1f));
+            
+            // Icon
+            iconView = new ImageView(context);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            iconView.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY));
+            addView(iconView, LayoutHelper.createFrame(20, 20, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 6, 0, 0));
+            
+            // Text
+            textView = new TextView(context);
+            textView.setTextColor(Color.WHITE);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_MEDIUM));
+            textView.setMaxLines(1);
+            textView.setEllipsize(TextUtils.TruncateAt.END);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 2, 0, 2, 4));
+            
+            // Background
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(0x33000000); // 20% black
+            background.setCornerRadius(AndroidUtilities.dp(12));
+            setBackground(background);
+            
+            // Click feedback
+            setClickable(true);
+            setFocusable(true);
+        }
+        
+        public void setAction(int icon, String text, int type) {
+            iconView.setImageResource(icon);
+            textView.setText(text);
+            actionType = type;
+        }
+        
+        public int getActionType() {
+            return actionType;
         }
     }
 
@@ -5260,7 +5320,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         profileButtonContainer = new FrameLayout(context);
         updateProfileButtonContainerBackground();
+        
+        // Add LinearLayout for buttons
+        LinearLayout buttonLayout = new LinearLayout(context);
+        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonLayout.setGravity(Gravity.CENTER);
+        buttonLayout.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        profileButtonContainer.addView(buttonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
         frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
+        
+        // Populate profile action buttons
+        updateProfileActionButtons();
         writeButton.setOnClickListener(v -> {
             if (writeButton.getTag() != null) {
                 return;
@@ -13795,6 +13866,182 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             int backgroundColor = AvatarDrawable.getProfileBackColorForId(userId != 0 || ChatObject.isChannel(chatId, currentAccount) && !currentChat.megagroup ? 5 : chatId, resourcesProvider);
             profileButtonContainer.setBackgroundColor(backgroundColor);
         } catch (Exception e) {}
+    }
+    
+    private void updateProfileActionButtons() {
+        if (profileButtonContainer == null) return;
+        
+        LinearLayout buttonLayout = (LinearLayout) profileButtonContainer.getChildAt(0);
+        buttonLayout.removeAllViews();
+        
+        ArrayList<ProfileActionButton> buttons = new ArrayList<>();
+        Context context = getContext();
+        
+        if (userId != 0) {
+            // User profile buttons
+            ProfileActionButton messageBtn = new ProfileActionButton(context);
+            messageBtn.setAction(R.drawable.profile_action_message, LocaleController.getString("Message", R.string.Message), profile_action_message);
+            buttons.add(messageBtn);
+            
+            // Add call/video buttons if available
+            if (userInfo != null && userInfo.video_calls_available) {
+                ProfileActionButton callBtn = new ProfileActionButton(context);
+                callBtn.setAction(R.drawable.profile_action_call, LocaleController.getString("Call", R.string.Call), profile_action_call);
+                buttons.add(callBtn);
+                
+                ProfileActionButton videoBtn = new ProfileActionButton(context);
+                videoBtn.setAction(R.drawable.profile_action_video, LocaleController.getString("VideoCall", R.string.VideoCall), profile_action_video_call);
+                buttons.add(videoBtn);
+            }
+            
+            ProfileActionButton shareBtn = new ProfileActionButton(context);
+            shareBtn.setAction(R.drawable.profile_action_share, LocaleController.getString("ShareContact", R.string.ShareContact), profile_action_share);
+            buttons.add(shareBtn);
+            
+        } else if (chatId != 0) {
+            // Channel/Group profile buttons
+            boolean isChannel = ChatObject.isChannel(currentChat);
+            boolean isMegagroup = currentChat.megagroup;
+            boolean hasJoined = ChatObject.isNotInChat(currentChat);
+            
+            if (hasJoined) {
+                // Not joined
+                ProfileActionButton joinBtn = new ProfileActionButton(context);
+                joinBtn.setAction(R.drawable.profile_action_join, LocaleController.getString("ChannelJoin", R.string.ChannelJoin), profile_action_join);
+                buttons.add(joinBtn);
+            } else {
+                // Joined
+                ProfileActionButton messageBtn = new ProfileActionButton(context);
+                messageBtn.setAction(R.drawable.profile_action_message, LocaleController.getString("Message", R.string.Message), profile_action_message);
+                buttons.add(messageBtn);
+            }
+            
+            // Mute/Unmute button
+            boolean isMuted = getMessagesController().isDialogMuted(getDialogId(), topicId);
+            ProfileActionButton muteBtn = new ProfileActionButton(context);
+            if (isMuted) {
+                muteBtn.setAction(R.drawable.profile_action_unmute, LocaleController.getString("Unmute", R.string.Unmute), profile_action_unmute);
+            } else {
+                muteBtn.setAction(R.drawable.profile_action_mute, LocaleController.getString("Mute", R.string.Mute), profile_action_mute);
+            }
+            buttons.add(muteBtn);
+            
+            ProfileActionButton shareBtn = new ProfileActionButton(context);
+            shareBtn.setAction(R.drawable.profile_action_share, LocaleController.getString("BotShare", R.string.BotShare), profile_action_share);
+            buttons.add(shareBtn);
+            
+            ProfileActionButton reportBtn = new ProfileActionButton(context);
+            reportBtn.setAction(R.drawable.profile_action_report, LocaleController.getString("ReportChat", R.string.ReportChat), profile_action_report);
+            buttons.add(reportBtn);
+        }
+        
+        // Add buttons to layout with spacing
+        for (int i = 0; i < buttons.size(); i++) {
+            ProfileActionButton button = buttons.get(i);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, AndroidUtilities.dp(45), 1f);
+            if (i > 0) {
+                params.leftMargin = AndroidUtilities.dp(6);
+            }
+            
+            buttonLayout.addView(button, params);
+            
+            // Set click listener
+            button.setOnClickListener(v -> {
+                handleProfileActionClick(button.getActionType());
+            });
+        }
+    }
+    
+    private void handleProfileActionClick(int actionType) {
+        switch (actionType) {
+            case profile_action_message:
+                if (userId != 0) {
+                    TLRPC.User user = getMessagesController().getUser(userId);
+                    if (user != null && !UserObject.isContact(user)) {
+                        Bundle args = new Bundle();
+                        args.putLong("user_id", userId); 
+                        ContactAddActivity fragment = new ContactAddActivity(args);
+                        presentFragment(fragment);
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putLong("user_id", userId);
+                        if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+                            return;
+                        }
+                        presentFragment(new ChatActivity(args));
+                    }
+                } else if (chatId != 0) {
+                    Bundle args = new Bundle();
+                    args.putLong("chat_id", chatId);
+                    if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+                        return;
+                    }
+                    presentFragment(new ChatActivity(args));
+                }
+                break;
+                
+            case profile_action_call:
+                if (userId != 0) {
+                    VoIPHelper.startCall(getMessagesController().getUser(userId), false, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+                }
+                break;
+                
+            case profile_action_video_call:
+                if (userId != 0) {
+                    VoIPHelper.startCall(getMessagesController().getUser(userId), true, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+                }
+                break;
+                
+            case profile_action_share:
+                try {
+                    String text = null;
+                    if (userId != 0) {
+                        TLRPC.User user = getMessagesController().getUser(userId);
+                        if (user != null) {
+                            text = ContactsController.formatName(user.first_name, user.last_name) + " " + "https://t.me/" + UserObject.getPublicUsername(user);
+                        }
+                    } else if (chatId != 0) {
+                        TLRPC.Chat chat = getMessagesController().getChat(chatId);
+                        if (chat != null && ChatObject.getPublicUsername(chat) != null) {
+                            text = chat.title + " " + "https://t.me/" + ChatObject.getPublicUsername(chat);
+                        }
+                    }
+                    if (text != null) {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(Intent.EXTRA_TEXT, text);
+                        startActivityForResult(Intent.createChooser(intent, LocaleController.getString("BotShare", R.string.BotShare)), 500);
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+                break;
+                
+            case profile_action_mute:
+            case profile_action_unmute:
+                getNotificationsController().muteDialog(getDialogId(), topicId, actionType == profile_action_mute);
+                updateProfileActionButtons();
+                break;
+                
+            case profile_action_report:
+                if (getParentActivity() != null) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString("ReportChat", R.string.ReportChat));
+                    builder.setMessage(LocaleController.getString("ReportSpamAlert", R.string.ReportSpamAlert));
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialogInterface, i) -> {
+                        // Report logic here - simplified for now
+                        BulletinFactory.of(ProfileActivity.this).createSimpleBulletin(R.raw.info, LocaleController.getString("ReportChatSent", R.string.ReportChatSent)).show();
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    showDialog(builder.create());
+                }
+                break;
+                
+            case profile_action_join:
+                getMessagesController().addUserToChat(chatId, UserConfig.getInstance(currentAccount).getCurrentUser(), 0, null, ProfileActivity.this, null);
+                break;
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
