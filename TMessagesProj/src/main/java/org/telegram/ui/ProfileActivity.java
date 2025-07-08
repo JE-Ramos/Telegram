@@ -7313,6 +7313,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             writeButton.setScaleY(writeButtonVisible ? 1.0f : 0.2f);
                             writeButton.setAlpha(writeButtonVisible ? 1.0f : 0.0f);
                         }
+                        
                     }
 
                     if (qrItem != null) {
@@ -11658,18 +11659,67 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             headerCell.setText(LocaleController.getString(R.string.Info));
                         }
+                        // Add top padding for spacing below write button
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            AndroidUtilities.dp(32),
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == membersHeaderRow) {
                         headerCell.setText(LocaleController.getString(R.string.ChannelMembers));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == settingsSectionRow2) {
                         headerCell.setText(LocaleController.getString(R.string.SETTINGS));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == numberSectionRow) {
                         headerCell.setText(LocaleController.getString(R.string.Account));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == helpHeaderRow) {
                         headerCell.setText(LocaleController.getString(R.string.SettingsHelp));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == debugHeaderRow) {
                         headerCell.setText(LocaleController.getString(R.string.SettingsDebug));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     } else if (position == botPermissionsHeader) {
                         headerCell.setText(LocaleController.getString(R.string.BotProfilePermissions));
+                        // Reset padding for other header types
+                        headerCell.setPadding(
+                            headerCell.getPaddingLeft(),
+                            0,
+                            headerCell.getPaddingRight(),
+                            headerCell.getPaddingBottom()
+                        );
                     }
                     headerCell.setTextColor(dontApplyPeerColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader), false));
                     break;

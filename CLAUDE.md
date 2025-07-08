@@ -1,0 +1,232 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is the official Telegram Android app source code. It's a complex messaging application with native C++ components for performance-critical operations and extensive custom UI framework.
+
+## Common Development Commands
+
+### Building the Project
+```bash
+# Build debug version
+./gradlew assembleDebug
+
+# Build release version  
+./gradlew assembleRelease
+
+# Build specific variant (HA_private, HA_public, standalone)
+./gradlew assembleHA_private
+./gradlew assembleHA_public
+./gradlew assembleStandalone
+
+# Clean build
+./gradlew clean
+```
+
+### Running Tests
+```bash
+# Run all tests
+./gradlew test
+
+# Run specific test variant
+./gradlew testDebug
+```
+
+### Code Analysis
+```bash
+# Run lint checks
+./gradlew lint
+
+# Generate lint report
+./gradlew lintDebug
+```
+
+### Native Code
+```bash
+# Build native components (requires NDK)
+./gradlew externalNativeBuild
+```
+
+## High-Level Architecture
+
+### Core Components
+
+**Multi-Account Architecture**: The app supports multiple simultaneous user accounts through `AccountInstance` which provides account-specific access to all major controllers.
+
+**Main Application Flow**:
+- `ApplicationLoader` - Main application initialization
+- `LaunchActivity` - Primary entry point and fragment host
+- `AccountInstance` - Account-specific service locator
+- `BaseFragment` - Foundation for all UI screens
+
+**Key Packages**:
+- `org.telegram.messenger` - Core business logic (MessagesController, ContactsController, etc.)
+- `org.telegram.tgnet` - Network layer and MTProto protocol implementation
+- `org.telegram.ui` - UI components and fragments
+- `org.telegram.SQLite` - Database abstraction layer
+
+### Architectural Patterns
+
+**Observer Pattern**: `NotificationCenter` provides event-driven communication between components.
+
+**Singleton Controllers**: Most business logic controllers follow singleton pattern with account-specific instances.
+
+**Fragment-Based UI**: Custom `ActionBarLayout` manages fragment transitions with `BaseFragment` as the foundation.
+
+**Hybrid Native/Java**: Performance-critical operations (networking, media processing, cryptography) implemented in C++ with JNI bridge.
+
+### Key Controllers
+
+- `MessagesController` - Core messaging logic
+- `MessagesStorage` - Database operations
+- `ConnectionsManager` - Network connections
+- `MediaController` - Media handling
+- `NotificationsController` - Push notifications
+- `ContactsController` - Contact management
+
+### Data Flow
+
+1. User Interaction → UI Components → Business Logic Controllers
+2. Controllers → Network Layer (tgnet) → MTProto Protocol
+3. Data Persistence → MessagesStorage → SQLite Database
+4. Events → NotificationCenter → UI Updates
+
+## Native Code Integration
+
+The app includes extensive native C++ code in `TMessagesProj/jni/`:
+
+- **tgnet/**: MTProto protocol implementation
+- **ffmpeg/**: Video/audio processing
+- **opus/**: Audio codec
+- **mozjpeg/**: JPEG processing
+- **boringssl/**: Cryptographic operations
+- **rlottie/**: Lottie animation rendering
+
+## Build Variants
+
+- `debug` - Development build with debugging enabled
+- `release` - Production build
+- `HA_private` - Private beta build
+- `HA_public` - Public beta build
+- `standalone` - Standalone version without Google Services
+
+## Development Setup Requirements
+
+- Android Studio 3.4+
+- Android NDK rev. 20+
+- Android SDK 8.1+
+- CMake 3.10.2+
+- Custom release.keystore and google-services.json required for building
+
+## Code Organization
+
+**Main Module**: `TMessagesProj/` contains the core library code
+**App Modules**: `TMessagesProj_App/`, `TMessagesProj_AppStandalone/`, etc. are different app variants
+
+**Source Structure**:
+- `src/main/java/org/telegram/` - Main application code
+- `jni/` - Native C++ code
+- `config/` - Build configuration files
+
+## Important Configuration
+
+- `BuildVars.java` - Contains API keys and configuration (requires setup)
+- `local.properties` - Local build configuration
+- Multiple build variants with different configurations
+- Proguard rules for release builds
+
+## Development Notes
+
+- The app uses a custom UI framework rather than standard Android components
+- Extensive theming system with dynamic theme support
+- Multi-account support is built into the architecture from the ground up
+- Performance optimizations include custom memory management and efficient data structures
+- Security features include end-to-end encryption and secure local storage
+
+# Memories
+
+## ProfileActivity Avatar Expansion Animation
+
+The ProfileActivity uses a sophisticated layered layout system for the avatar expansion animation:
+
+### Layout Hierarchy
+1. **ListView** - Added first with 88dp top padding (`PROFILE_HEADER_COLLAPSED_HEIGHT_DP`)
+2. **TopView** - Background color layer
+3. **Avatar Container** - Overlay positioned above ListView's padded area
+
+### Expansion Mechanism
+The ListView doesn't move - instead the system uses coordinate-based animation:
+
+**Key Variable: `extraHeight`**
+- Tracks how much the first ListView item (position 0) has moved up when pulled down
+- When `extraHeight > 0`, triggers avatar expansion animation
+
+**Scroll Detection (ProfileActivity.java:7123-7167)**
+- `checkListViewScroll()` monitors the first ListView item's position
+- When first item is pulled down (`top > 0`), `extraHeight = top`
+- Triggers `needLayout(true)` to recalculate avatar positioning
+
+**Avatar Animation Response (ProfileActivity.java:7509-7551)**
+- `avatarAnimationProgress` controls the expansion transition
+- Avatar scales from 42x42dp to fill expanded space
+- Corner radius changes from round to square
+- Position animates from (64,0) to center of expanded area
+- Container resizes: `(extraHeight + newTop) / avatarScale`
+
+**Visual Effect**: Avatar appears to expand with pull gesture, but it's actually an overlay growing to fill the space revealed by the pulled-down ListView content.
+
+## ProfileActivity Write Button States
+
+The write button (60x60dp circular FAB) adapts its appearance and behavior based on profile context:
+
+### Button States by Profile Type
+
+**Own Profile (Self) - Edit Mode:**
+- **Icon**: `R.raw.camera_outline` (Lottie animation)
+- **Action**: Opens camera/gallery picker for profile picture
+- **Description**: "Change profile picture"
+
+**Other User Profile:**
+- **Icon**: `R.drawable.profile_newmsg` (message icon)
+- **Action**: Opens private chat with user
+- **Description**: "Open chat"
+
+**Channel/Group Profile:**
+- **Icon**: `R.drawable.profile_discuss` (discussion icon)
+- **Action**: Opens linked discussion chat
+- **Description**: "View discussion"
+
+### Visibility Logic (ProfileActivity.java:7267-7269)
+Shows when: avatar expansion > 20%, not in search mode, and context-specific conditions
+Hides when: avatar collapsed, search active, or profile editing with avatar row visible
+
+### Animation Transitions
+- **Appear**: Scale 0.2f→1.0f, Alpha 0.0f→1.0f (DecelerateInterpolator, 150ms)
+- **Disappear**: Scale 1.0f→0.2f, Alpha 1.0f→0.0f (AccelerateInterpolator, 150ms)
+
+### Background Styling (ProfileActivity.java:13627-13647)
+All states use circular background with shadow, adapting colors based on theme and peer color scheme.
+
+## ProfileActivity Profile Info Section Spacing
+
+Added consistent spacing above the profile info section to provide visual buffer below the write button area.
+
+### Implementation (ProfileActivity.java:11662-11668)
+**Method**: Header padding approach - adds 32dp top padding to `infoHeaderRow` in `onBindViewHolder()`
+
+### Universal Application
+- **User Profiles**: 32dp spacing above "Info" header
+- **Channel Profiles**: 32dp spacing above "Description" header  
+- **Topic Profiles**: 32dp spacing above topic header
+- **Always Applied**: Consistent spacing regardless of write button presence
+
+### Technical Details
+- **Location**: `VIEW_TYPE_HEADER` case in ListAdapter.onBindViewHolder()
+- **Padding**: `headerCell.setPadding(left, AndroidUtilities.dp(32), right, bottom)`
+- **Scope**: Only applied to `position == infoHeaderRow`
+- **Other Headers**: Explicitly reset to 0 top padding to prevent layout issues
+
+### Rationale
+Provides visual separation between the floating write button area and profile content, improving UI hierarchy and readability across all profile types (users, channels, topics).
