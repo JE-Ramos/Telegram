@@ -7305,6 +7305,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 float upwardMovement = AndroidUtilities.lerp(0f, maxDistance, squeezeProgress);
                 float adjustedContainerY = containerY - upwardMovement;
                 
+                // Add bounds to prevent overshooting above action bar
+                float minY = actionBarBottom - AndroidUtilities.dp(5); // Leave small gap above action bar
+                adjustedContainerY = Math.max(adjustedContainerY, minY);
+                
                 // Apply squeeze effect and position
                 profileButtonContainer.setScaleY(scaleY);
                 profileButtonContainer.setTranslationY(adjustedContainerY);
@@ -7327,7 +7331,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 profileButtonContainerAnimation.setInterpolator(new DecelerateInterpolator());
                                 profileButtonContainerAnimation.playTogether(
                                         ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_X, 1.0f),
-                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_Y, 1.0f),
                                         ObjectAnimator.ofFloat(profileButtonContainer, View.ALPHA, 1.0f)
                                 );
                             } else {
@@ -7348,7 +7351,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             profileButtonContainerAnimation.start();
                         } else {
                             profileButtonContainer.setScaleX(1.0f);
-                            profileButtonContainer.setScaleY(1.0f);
                             profileButtonContainer.setAlpha(profileButtonContainerVisible ? 1.0f : 0.0f);
                         }
                     }
