@@ -336,6 +336,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
     private RLottieImageView writeButton;
     private AnimatorSet writeButtonAnimation;
+    private FrameLayout profileButtonContainer;
+    private AnimatorSet profileButtonContainerAnimation;
     private AnimatorSet qrItemAnimation;
     private Drawable lockIconDrawable;
     private final Drawable[] verifiedDrawable = new Drawable[2];
@@ -5254,6 +5256,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         writeButton.setScaleType(ImageView.ScaleType.CENTER);
 
         frameLayout.addView(writeButton, LayoutHelper.createFrame(60, 60, Gravity.RIGHT | Gravity.TOP, 0, 0, 16, 0));
+
+        profileButtonContainer = new FrameLayout(context);
+        // Debug styling - transparent background with thick red border
+        profileButtonContainer.setBackgroundColor(Color.TRANSPARENT);
+        GradientDrawable debugBorder = new GradientDrawable();
+        debugBorder.setColor(Color.TRANSPARENT);
+        debugBorder.setStroke(AndroidUtilities.dp(4), Color.RED);
+        profileButtonContainer.setBackground(debugBorder);
+        frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
         writeButton.setOnClickListener(v -> {
             if (writeButton.getTag() != null) {
                 return;
@@ -7261,13 +7272,72 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             listView.setOverScrollMode(extraHeight > AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP) && extraHeight < listView.getMeasuredWidth() - newTop ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_ALWAYS);
 
+            // Calculate visibility - writeButton only shows for linked channels, but profileButtonContainer shows for all
+            boolean writeButtonVisible = diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
+            if (writeButtonVisible && chatId != 0) {
+                writeButtonVisible = ChatObject.isChannel(currentChat) && !currentChat.megagroup && chatInfo != null && chatInfo.linked_chat_id != 0 && infoHeaderRow != -1;
+            }
+
+            // Profile button container visible for all profile types when expanded
+            boolean profileButtonContainerVisible = diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
+
             if (writeButton != null) {
                 writeButton.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset - AndroidUtilities.dp(29.5f));
+            }
 
-                boolean writeButtonVisible = diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
-                if (writeButtonVisible && chatId != 0) {
-                    writeButtonVisible = ChatObject.isChannel(currentChat) && !currentChat.megagroup && chatInfo != null && chatInfo.linked_chat_id != 0 && infoHeaderRow != -1;
+            if (profileButtonContainer != null) {
+                // Position profileButtonContainer above write button area
+                profileButtonContainer.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset);
+                if (!openAnimationInProgress) {
+                    boolean currentVisible = profileButtonContainer.getTag() == null;
+                    if (profileButtonContainerVisible != currentVisible) {
+                        if (profileButtonContainerVisible) {
+                            profileButtonContainer.setTag(null);
+                        } else {
+                            profileButtonContainer.setTag(0);
+                        }
+                        if (profileButtonContainerAnimation != null) {
+                            AnimatorSet old = profileButtonContainerAnimation;
+                            profileButtonContainerAnimation = null;
+                            old.cancel();
+                        }
+                        if (animated) {
+                            profileButtonContainerAnimation = new AnimatorSet();
+                            if (profileButtonContainerVisible) {
+                                profileButtonContainerAnimation.setInterpolator(new DecelerateInterpolator());
+                                profileButtonContainerAnimation.playTogether(
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_X, 1.0f),
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_Y, 1.0f),
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.ALPHA, 1.0f)
+                                );
+                            } else {
+                                profileButtonContainerAnimation.setInterpolator(new AccelerateInterpolator());
+                                profileButtonContainerAnimation.playTogether(
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_X, 0.2f),
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_Y, 0.2f),
+                                        ObjectAnimator.ofFloat(profileButtonContainer, View.ALPHA, 0.0f)
+                                );
+                            }
+                            profileButtonContainerAnimation.setDuration(150);
+                            profileButtonContainerAnimation.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    if (profileButtonContainerAnimation != null && profileButtonContainerAnimation.equals(animation)) {
+                                        profileButtonContainerAnimation = null;
+                                    }
+                                }
+                            });
+                            profileButtonContainerAnimation.start();
+                        } else {
+                            profileButtonContainer.setScaleX(profileButtonContainerVisible ? 1.0f : 0.2f);
+                            profileButtonContainer.setScaleY(profileButtonContainerVisible ? 1.0f : 0.2f);
+                            profileButtonContainer.setAlpha(profileButtonContainerVisible ? 1.0f : 0.0f);
+                        }
+                    }
                 }
+            }
+
+            if (writeButton != null) {
                 if (!openAnimationInProgress) {
                     boolean currentVisible = writeButton.getTag() == null;
                     if (writeButtonVisible != currentVisible) {
