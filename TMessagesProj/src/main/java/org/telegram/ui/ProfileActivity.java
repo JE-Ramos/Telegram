@@ -11659,10 +11659,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             headerCell.setText(LocaleController.getString(R.string.Info));
                         }
-                        // Add top padding for spacing below write button
+                        // Add top padding for spacing below write button (76dp = 60dp button + 16dp padding)
                         headerCell.setPadding(
                             headerCell.getPaddingLeft(),
-                            AndroidUtilities.dp(32),
+                            AndroidUtilities.dp(76),
                             headerCell.getPaddingRight(),
                             headerCell.getPaddingBottom()
                         );

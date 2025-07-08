@@ -214,19 +214,20 @@ All states use circular background with shadow, adapting colors based on theme a
 Added consistent spacing above the profile info section to provide visual buffer below the write button area.
 
 ### Implementation (ProfileActivity.java:11662-11668)
-**Method**: Header padding approach - adds 32dp top padding to `infoHeaderRow` in `onBindViewHolder()`
+**Method**: Header padding approach - adds 76dp top padding to `infoHeaderRow` in `onBindViewHolder()`
 
 ### Universal Application
-- **User Profiles**: 32dp spacing above "Info" header
-- **Channel Profiles**: 32dp spacing above "Description" header  
-- **Topic Profiles**: 32dp spacing above topic header
+- **User Profiles**: 76dp spacing above "Info" header
+- **Channel Profiles**: 76dp spacing above "Description" header  
+- **Topic Profiles**: 76dp spacing above topic header
 - **Always Applied**: Consistent spacing regardless of write button presence
 
 ### Technical Details
 - **Location**: `VIEW_TYPE_HEADER` case in ListAdapter.onBindViewHolder()
-- **Padding**: `headerCell.setPadding(left, AndroidUtilities.dp(32), right, bottom)`
+- **Padding**: `headerCell.setPadding(left, AndroidUtilities.dp(76), right, bottom)`
 - **Scope**: Only applied to `position == infoHeaderRow`
 - **Other Headers**: Explicitly reset to 0 top padding to prevent layout issues
+- **Spacing Calculation**: 76dp = 60dp (write button height) + 16dp (visual padding)
 
 ### Rationale
 Provides visual separation between the floating write button area and profile content, improving UI hierarchy and readability across all profile types (users, channels, topics).
