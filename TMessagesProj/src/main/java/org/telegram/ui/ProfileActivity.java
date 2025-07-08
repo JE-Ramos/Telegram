@@ -7283,7 +7283,31 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             if (profileButtonContainer != null) {
                 // Position profileButtonContainer above write button area
-                profileButtonContainer.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset);
+                float containerY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset;
+                
+                // Calculate squeeze animation based on distance to action bar
+                float actionBarBottom = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+                float containerTop = containerY;
+                float distanceToActionBar = containerTop - actionBarBottom;
+                
+                // Define squeeze parameters
+                float maxDistance = AndroidUtilities.dp(60); // Start squeezing when 60dp away
+                float normalHeight = AndroidUtilities.dp(76);
+                float minHeight = AndroidUtilities.dp(10);
+                
+                // Calculate squeeze progress (0.0 = normal, 1.0 = fully squeezed)
+                float squeezeProgress = Math.max(0, Math.min(1, (maxDistance - distanceToActionBar) / maxDistance));
+                
+                // Create squeeze effect - scale height smaller as it approaches action bar
+                float scaleY = AndroidUtilities.lerp(1.0f, 0.13f, squeezeProgress); // 0.13 ≈ 10dp/76dp
+                
+                // Move container up as it squeezes to eliminate gap with action bar
+                float upwardMovement = AndroidUtilities.lerp(0f, maxDistance, squeezeProgress);
+                float adjustedContainerY = containerY - upwardMovement;
+                
+                // Apply squeeze effect and position
+                profileButtonContainer.setScaleY(scaleY);
+                profileButtonContainer.setTranslationY(adjustedContainerY);
                 if (!openAnimationInProgress) {
                     boolean currentVisible = profileButtonContainer.getTag() == null;
                     if (profileButtonContainerVisible != currentVisible) {
@@ -7309,8 +7333,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             } else {
                                 profileButtonContainerAnimation.setInterpolator(new AccelerateInterpolator());
                                 profileButtonContainerAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_X, 0.2f),
-                                        ObjectAnimator.ofFloat(profileButtonContainer, View.SCALE_Y, 0.2f),
                                         ObjectAnimator.ofFloat(profileButtonContainer, View.ALPHA, 0.0f)
                                 );
                             }
@@ -7325,8 +7347,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             });
                             profileButtonContainerAnimation.start();
                         } else {
-                            profileButtonContainer.setScaleX(profileButtonContainerVisible ? 1.0f : 0.2f);
-                            profileButtonContainer.setScaleY(profileButtonContainerVisible ? 1.0f : 0.2f);
+                            profileButtonContainer.setScaleX(1.0f);
+                            profileButtonContainer.setScaleY(1.0f);
                             profileButtonContainer.setAlpha(profileButtonContainerVisible ? 1.0f : 0.0f);
                         }
                     }
