@@ -59,6 +59,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.net.Uri;
@@ -5258,12 +5259,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         frameLayout.addView(writeButton, LayoutHelper.createFrame(60, 60, Gravity.RIGHT | Gravity.TOP, 0, 0, 16, 0));
 
         profileButtonContainer = new FrameLayout(context);
-        // Debug styling - transparent background with thick red border
-        profileButtonContainer.setBackgroundColor(Color.TRANSPARENT);
-        GradientDrawable debugBorder = new GradientDrawable();
-        debugBorder.setColor(Color.TRANSPARENT);
-        debugBorder.setStroke(AndroidUtilities.dp(4), Color.RED);
-        profileButtonContainer.setBackground(debugBorder);
+        updateProfileButtonContainerBackground();
         frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
         writeButton.setOnClickListener(v -> {
             if (writeButton.getTag() != null) {
@@ -10379,6 +10375,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         adaptedColors.clear();
         if (topView != null) {
             topView.setBackgroundColorId(peerColor, true);
+            updateProfileButtonContainerBackground();
         }
         if (onlineTextView[1] != null) {
             int statusColor;
@@ -13740,6 +13737,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public void onBecomeFullyVisible() {
         super.onBecomeFullyVisible();
         writeButtonSetBackground();
+        updateProfileButtonContainerBackground();
         fullyVisible = true;
         createBirthdayEffect();
     }
@@ -13763,6 +13761,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
             writeButton.setBackground(combinedDrawable);
             writeButton.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.MULTIPLY));
+        } catch (Exception e) {}
+    }
+
+    private void updateProfileButtonContainerBackground() {
+        if (profileButtonContainer == null) return;
+        try {
+            // Use the same background color as the avatar
+            int backgroundColor = AvatarDrawable.getProfileBackColorForId(userId != 0 || ChatObject.isChannel(chatId, currentAccount) && !currentChat.megagroup ? 5 : chatId, resourcesProvider);
+            profileButtonContainer.setBackgroundColor(backgroundColor);
         } catch (Exception e) {}
     }
 
