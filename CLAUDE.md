@@ -231,3 +231,43 @@ Added consistent spacing above the profile info section to provide visual buffer
 
 ### Rationale
 Provides visual separation between the floating write button area and profile content, improving UI hierarchy and readability across all profile types (users, channels, topics).
+
+## ProfileActivity Profile Button Container System
+
+Implemented a comprehensive floating action button system that replaces the single write button with a full-width container holding multiple action buttons.
+
+### Container Implementation (ProfileActivity.java:5330-5355)
+**Method**: `profileButtonContainer` - Full-width FrameLayout overlay that follows same scroll behavior as write button
+**Position**: 76dp height (60dp button + 16dp padding) positioned above profile info section
+**Animation**: Squeeze animation using `scaleY` and `translationY` when approaching action bar
+**Background**: Dynamic background matching avatar colors with proper transparency
+
+### Button System (ProfileActivity.java:1859-1910)
+**Class**: `ProfileActionButton` - Custom button view with icon and text
+**Layout**: LinearLayout with ImageView (24dp icon) and TextView (10dp text)
+**Styling**: 
+- Light mode: `0x33000000` (20% black background)
+- Dark mode: `0x1AFFFFFF` (10% white background for lighter gray appearance)
+- Corner radius: 12dp
+- Height: 45dp for compact appearance
+
+### Dynamic Button Population (ProfileActivity.java:13872-13952)
+**Method**: `updateProfileActionButtons()` - Dynamically adds 2-4 buttons based on profile type
+**Button Types**:
+- **User Profiles**: Message, Call, Video, Share
+- **Bot Profiles**: Message, Share, Mute, Block
+- **Channel Profiles**: Message, Share, Mute, Leave
+- **Business Profiles**: Message, Call, Video, Share
+
+### Button Actions (ProfileActivity.java:13954-14008)
+**Method**: `handleProfileActionClick()` - Handles button click events
+**Actions**: Opens appropriate dialogs/activities for messaging, calling, sharing, etc.
+
+### Write Button Integration
+**Original Write Button**: Hidden with `setVisibility(View.GONE)` to prevent conflicts
+**Replacement**: ProfileButtonContainer provides same functionality with expanded options
+
+### Dark Mode Color Optimization
+**Issue**: Initial `0x80FFFFFF` (50% white) was too dark in dark mode
+**Solution**: Changed to `0x1AFFFFFF` (10% white) for lighter, more subtle gray appearance
+**Result**: Better visual hierarchy and readability in dark theme
