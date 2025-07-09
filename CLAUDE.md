@@ -271,3 +271,64 @@ Implemented a comprehensive floating action button system that replaces the sing
 **Issue**: Initial `0x80FFFFFF` (50% white) was too dark in dark mode
 **Solution**: Changed to `0x1AFFFFFF` (10% white) for lighter, more subtle gray appearance
 **Result**: Better visual hierarchy and readability in dark theme
+
+## ProfileActivity Avatar Expansion Animation Details
+
+### Avatar Movement During Expansion
+
+**Initial State (Collapsed)**:
+- Size: 42x42dp circular avatar
+- Position: 64dp from left, centered in action bar
+- Left margin: 64dp
+
+**Expanded State**:
+- Size: Fills expanded header area
+- Position: Centered horizontally (0 left margin)
+- Shape: Square (corner radius animates to 0)
+
+### Animation Path
+
+**Horizontal Movement (ProfileActivity.java:7515)**:
+```java
+avatarX = -AndroidUtilities.dpf2(47f) * diff;
+```
+- Moves 47dp to the left as `diff` progresses from 0 to 1
+
+**Vertical Movement (ProfileActivity.java:7516)**:
+```java
+avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + 
+          ActionBar.getCurrentActionBarHeight() / 2.0f * (1.0f + diff) - 
+          21 * AndroidUtilities.density + 
+          27 * AndroidUtilities.density * diff + 
+          actionBar.getTranslationY();
+```
+- Complex formula creates curved trajectory
+- Combines action bar height scaling with linear movement
+
+### Scaling Phases
+
+**Phase 1 (0-88dp pull)**:
+```java
+avatarScale = (42 + 18 * diff) / 42.0f;
+```
+- Scales from 42dp to 60dp (1.43x)
+
+**Phase 2 (beyond 88dp)**:
+```java
+avatarScale = AndroidUtilities.lerp((42f + 18f) / 42f, (42f + 42f + 18f) / 42f, Math.min(1f, expandProgress * 3f));
+```
+- Scales from 60dp to 102dp (2.43x)
+
+### Container Positioning (ProfileActivity.java:7742-7746)
+```java
+avatarContainer.setScaleX(avatarScale);
+avatarContainer.setScaleY(avatarScale);
+avatarContainer.setTranslationX(avatarX);
+avatarContainer.setTranslationY((float) Math.ceil(avatarY));
+```
+
+### Why the Curved Movement
+The curved trajectory results from the non-linear Y position formula that combines:
+- Action bar height multiplication by `(1.0f + diff)`
+- Linear movement component `27 * density * diff`
+- This creates a parabolic path where the avatar moves down-left in a smooth curve
