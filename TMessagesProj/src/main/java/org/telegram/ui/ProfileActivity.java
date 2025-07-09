@@ -1896,7 +1896,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             
             // Background
             GradientDrawable background = new GradientDrawable();
-            background.setColor(0x33000000); // 20% black
+            
+            // Make background lighter in dark mode
+            if (Theme.isCurrentThemeDark()) {
+                background.setColor(0x1AFFFFFF); // 10% white (lighter gray)
+            } else {
+                background.setColor(0x33000000); // 20% black
+            }
+            
             background.setCornerRadius(AndroidUtilities.dp(12));
             setBackground(background);
             
@@ -5317,6 +5324,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         writeButton.setScaleType(ImageView.ScaleType.CENTER);
 
         frameLayout.addView(writeButton, LayoutHelper.createFrame(60, 60, Gravity.RIGHT | Gravity.TOP, 0, 0, 16, 0));
+        writeButton.setVisibility(View.GONE); // Hide the write button
 
         profileButtonContainer = new FrameLayout(context);
         updateProfileButtonContainerBackground();
