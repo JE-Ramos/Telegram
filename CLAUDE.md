@@ -373,3 +373,47 @@ When the user increased avatar size but it became "squarish circle", this was be
 5. A 48dp radius creates a perfect circle, suggesting ~96dp actual rendered size
 
 **Key Insight**: The avatar's displayed size is affected by `avatarScale` transformations, making it appear larger than its defined container size.
+
+## ProfileActivity Centered Header Layout System
+
+Implemented a centered layout system for the ProfileActivity header to improve visual balance and modern design aesthetics.
+
+### Avatar Container Positioning (ProfileActivity.java:4992)
+**Original**: Left-aligned at 64dp with 42x42dp size
+**Updated**: Centered with `Gravity.CENTER_HORIZONTAL` and 24x24dp size
+```java
+int avatarSize = AndroidUtilities.dp(24);
+int centerX = avatarSize + AndroidUtilities.dp(12);  // 36dp total offset
+avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(avatarSize, avatarSize, 
+    Gravity.CENTER_HORIZONTAL, 
+    centerX / AndroidUtilities.density,  // 36dp left margin
+    -centerX / AndroidUtilities.density, // -36dp top margin
+    0, 0));
+```
+
+### Name and Status Text Centering (ProfileActivity.java:5207-5210)
+**Problem**: nameTextView used 118dp left margin designed for left-aligned layout
+**Solution**: Updated to match avatar's 36dp base offset for consistent centering
+```java
+int baseOffset = AndroidUtilities.dp(36); // Same as avatar's centerX calculation
+int nameLeftMargin = baseOffset - (nameTextView[a].getSideDrawablesSize() / 2);
+```
+
+### Animation Coordinate Updates (ProfileActivity.java:7879-7882)
+**Issue**: Animation translations used -21dp offset for old left-aligned system
+**Fix**: Updated to -47dp offset to account for positioning difference (118dp - 36dp = 82dp, adjusted for centering)
+```java
+nameX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
+onlineX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
+```
+
+### Key Benefits
+- **Visual Consistency**: Avatar and text elements properly centered
+- **Modern Layout**: Improved visual hierarchy and balance
+- **Maintained Animations**: All expand/collapse animations preserved
+- **Drawable Compensation**: Side drawable positioning still properly compensated
+
+### Technical Notes
+- Both `avatarContainer` and `nameTextView` use `Gravity.CENTER_HORIZONTAL` with matching 36dp base offset
+- Animation calculations adjusted to maintain smooth transitions during header expansion
+- Works well for communities and channels where centered layout improves readability

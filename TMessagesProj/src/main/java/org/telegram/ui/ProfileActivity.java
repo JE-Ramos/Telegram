@@ -5203,8 +5203,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
             nameTextView[a].setRightDrawableOutside(a == 0);
-            // dynamic nametextview left margin
-            int nameLeftMargin = 118 - (nameTextView[a].getSideDrawablesSize() / 2);
+            // Center nameTextView to match avatar positioning (36dp base offset like avatar)
+            int baseOffset = AndroidUtilities.dp(36); // Same as avatar's centerX calculation
+            int nameLeftMargin = baseOffset - (nameTextView[a].getSideDrawablesSize() / 2);
             Log.d("ProfileDebug", "nameLeftMargin :" + nameLeftMargin + " getSideDrawablesSize: " + nameTextView[a].getSideDrawablesSize());
             avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, nameLeftMargin, 44, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
         }
@@ -7874,9 +7875,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void refreshNameAndOnlineXY() {
-        nameX = AndroidUtilities.dp(-21f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
+        // Adjust nameX calculation to account for new centered positioning (was -21dp, now adjust relative to center)
+        nameX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
         nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7f) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
-        onlineX = AndroidUtilities.dp(-21f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
+        // Adjust onlineX calculation to match nameX centering
+        onlineX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
         onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
     }
 
