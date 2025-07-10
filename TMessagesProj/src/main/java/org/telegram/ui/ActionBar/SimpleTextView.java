@@ -853,10 +853,15 @@ public class SimpleTextView extends View implements Drawable.Callback {
             } else {
                 y = getPaddingTop() + (textHeight - leftDrawable.getIntrinsicHeight()) / 2 + leftDrawableTopPadding;
             }
+            // PROFILEDEBUG - Log left drawable drawing when leftDrawableOutside=false
+            android.util.Log.d("ProfileDebug", "SimpleTextView draw - Drawing left drawable (inside) at x=" + x + ", y=" + y + ", w=" + leftDrawable.getIntrinsicWidth() + ", h=" + leftDrawable.getIntrinsicHeight());
+            android.util.Log.d("ProfileDebug", "SimpleTextView draw - textOffsetX before=" + textOffsetX);
+            
             leftDrawable.setBounds(x, y, x + leftDrawable.getIntrinsicWidth(), y + leftDrawable.getIntrinsicHeight());
             leftDrawable.draw(canvas);
             if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT || (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.CENTER_HORIZONTAL) {
                 textOffsetX += drawablePadding + leftDrawable.getIntrinsicWidth();
+                android.util.Log.d("ProfileDebug", "SimpleTextView draw - textOffsetX after=" + textOffsetX);
             }
             totalWidth += drawablePadding + leftDrawable.getIntrinsicWidth();
         } else if (leftDrawableOutside && leftDrawable != null) {
@@ -974,7 +979,11 @@ public class SimpleTextView extends View implements Drawable.Callback {
         if (layout != null) {
             if (leftDrawableOutside || rightDrawableOutside || ellipsizeByGradient || paddingRight > 0) {
                 canvas.save();
-                canvas.clipRect(textOffsetX, 0, getMaxTextWidth() - paddingRight - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? 2 : 0), getMeasuredHeight());
+                int clipLeft = textOffsetX;
+                int clipRight = getMaxTextWidth() - paddingRight - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? 2 : 0);
+                // PROFILEDEBUG - Log clipping rectangle
+                android.util.Log.d("ProfileDebug", "SimpleTextView draw - Setting clip rect: left=" + clipLeft + ", right=" + clipRight + ", conditions: leftDrawableOutside=" + leftDrawableOutside + ", rightDrawableOutside=" + rightDrawableOutside + ", ellipsizeByGradient=" + ellipsizeByGradient + ", paddingRight=" + paddingRight);
+                canvas.clipRect(clipLeft, 0, clipRight, getMeasuredHeight());
             }
             Emoji.emojiDrawingUseAlpha = usaAlphaForEmoji;
             if (wrapBackgroundDrawable != null) {
@@ -1098,8 +1107,18 @@ public class SimpleTextView extends View implements Drawable.Callback {
             canvas.restoreToCount(restore);
         }
 
+        // PROFILEDEBUG - Log left drawable state
+        android.util.Log.d("ProfileDebug", "SimpleTextView draw - leftDrawable=" + (leftDrawable != null ? "present" : "null") + ", leftDrawableOutside=" + leftDrawableOutside);
+        
         if (leftDrawable != null && leftDrawableOutside) {
             int x = 0;
+            // For centered text, position left drawable using stable center-based calculation
+            if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.CENTER_HORIZONTAL) {
+                // Calculate based on view center rather than dynamic offsets to avoid jitter
+                int viewCenter = getMeasuredWidth() / 2;
+                int textHalfWidth = (textWidth + leftDrawable.getIntrinsicWidth() + drawablePadding) / 2;
+                x = viewCenter - textHalfWidth;
+            }
             int dw = (int) (leftDrawable.getIntrinsicWidth());
             int dh = (int) (leftDrawable.getIntrinsicHeight());
             int y;
@@ -1110,6 +1129,8 @@ public class SimpleTextView extends View implements Drawable.Callback {
             }
             leftDrawable.setBounds(x, y, x + dw, y + dh);
             
+            android.util.Log.d("ProfileDebug", "SimpleTextView draw - Drawing left drawable at x=" + x + ", y=" + y + ", w=" + dw + ", h=" + dh);
+            
             // PROFILEDEBUG animatedEmoji - Debug background for left drawable (animated emoji/status)
             if (debugPaint == null) {
                 debugPaint = new Paint();
@@ -1119,7 +1140,12 @@ public class SimpleTextView extends View implements Drawable.Callback {
             canvas.drawRect(x, y, x + dw, y + dh, debugPaint);
             
             leftDrawable.draw(canvas);
+        } else {
+            android.util.Log.d("ProfileDebug", "SimpleTextView draw - NOT drawing left drawable");
         }
+        // PROFILEDEBUG - Log right drawable state
+        android.util.Log.d("ProfileDebug", "SimpleTextView draw - rightDrawable=" + (rightDrawable != null ? "present" : "null") + ", rightDrawableOutside=" + rightDrawableOutside);
+        
         if (rightDrawable != null && rightDrawableOutside) {
             int x = Math.min(textOffsetX + textWidth + drawablePadding + (scrollingOffset == 0 ? -nextScrollX : (int) -scrollingOffset) + nextScrollX, getMaxTextWidth() - paddingRight + drawablePadding);
             int dw = (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale);

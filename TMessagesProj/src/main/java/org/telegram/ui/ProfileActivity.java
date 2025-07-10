@@ -10102,10 +10102,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (leftIcon == null && currentEncryptedChat == null && user.bot_verification_icon != 0) {
                     // PROFILEDEBUG - Bot verification case, let framework handle centering
+                    Log.d("ProfileDebug", "USER PROFILE: Setting leftDrawableOutside=TRUE for bot verification, userId=" + user.id);
                     nameTextView[a].setLeftDrawableOutside(true);
+                    nameTextView[a].setDrawablePadding(AndroidUtilities.dp(2)); // Tighter spacing for verification icons
                     leftIcon = getBotVerificationDrawable(user.bot_verification_icon, false, a);
                 } else {
+                    Log.d("ProfileDebug", "USER PROFILE: Setting leftDrawableOutside=FALSE, no bot verification, userId=" + (user != null ? user.id : "null"));
                     nameTextView[a].setLeftDrawableOutside(false);
+                    nameTextView[a].setDrawablePadding(AndroidUtilities.dp(4)); // Default spacing
                 }
                 nameTextView[a].setLeftDrawable(leftIcon);
                 // PROFILEDEBUG - Let framework handle centering for all drawable cases
@@ -10366,7 +10370,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         changed = true;
                     }
                 }
-                nameTextView[a].setLeftDrawableOutside(false);
+                // PROFILEDEBUG - Don't preset leftDrawableOutside, let bot verification logic handle it
                 nameTextView[a].setLeftDrawable(null);
                 nameTextView[a].setRightDrawableOutside(a == 0);
                 nameTextView[a].setRightDrawableOnClick(null);
@@ -10418,11 +10422,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 if (chat.bot_verification_icon != 0) {
+                    Log.d("ProfileDebug", "CHAT PROFILE: Setting leftDrawableOutside=TRUE for bot verification, chatId=" + chat.id);
                     nameTextView[a].setLeftDrawableOutside(true);
+                    nameTextView[a].setDrawablePadding(AndroidUtilities.dp(2)); // Tighter spacing for verification icons
                     Drawable botVerificationDrawable = getBotVerificationDrawable(chat.bot_verification_icon, false, a);
                     nameTextView[a].setLeftDrawable(botVerificationDrawable);
                     // PROFILEDEBUG - Let framework handle centering for chat bot verification
                 } else {
+                    Log.d("ProfileDebug", "CHAT PROFILE: Setting leftDrawableOutside=FALSE, no bot verification, chatId=" + chat.id);
+                    nameTextView[a].setLeftDrawableOutside(false);
+                    nameTextView[a].setDrawablePadding(AndroidUtilities.dp(4)); // Default spacing
                     nameTextView[a].setLeftDrawable(null);
                 }
                 if (a == 0 && onlineTextOverride != null) {
