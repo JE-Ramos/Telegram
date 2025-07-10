@@ -131,6 +131,11 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private OnClickListener rightDrawableOnClickListener;
     private boolean maybeClick;
     private float touchDownX, touchDownY;
+    
+    // PROFILEDEBUG Debug paints for drawable areas
+    private Paint debugPaint;
+    private Paint debugPaint2;
+    private Paint debugPaint3;
 
     private AnimatedEmojiSpan.EmojiGroupedSpans emojiStack;
     private int emojiCacheType = AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES;
@@ -1104,6 +1109,15 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 y = getPaddingTop() + (textHeight - dh) / 2 + leftDrawableTopPadding;
             }
             leftDrawable.setBounds(x, y, x + dw, y + dh);
+            
+            // PROFILEDEBUG animatedEmoji - Debug background for left drawable (animated emoji/status)
+            if (debugPaint == null) {
+                debugPaint = new Paint();
+                debugPaint.setColor(0x88FF0000); // Semi-transparent red
+                debugPaint.setStyle(Paint.Style.FILL);
+            }
+            canvas.drawRect(x, y, x + dw, y + dh, debugPaint);
+            
             leftDrawable.draw(canvas);
         }
         if (rightDrawable != null && rightDrawableOutside) {
@@ -1119,6 +1133,15 @@ public class SimpleTextView extends View implements Drawable.Callback {
             rightDrawable.setBounds(x, y, x + dw, y + dh);
             rightDrawableX = x + (dw >> 1);
             rightDrawableY = y + (dh >> 1);
+            
+            // PROFILEDEBUG animatedEmoji - Debug background for right drawable (animated emoji/status)
+            if (debugPaint2 == null) {
+                debugPaint2 = new Paint();
+                debugPaint2.setColor(0x8800FF00); // Semi-transparent green
+                debugPaint2.setStyle(Paint.Style.FILL);
+            }
+            canvas.drawRect(x, y, x + dw, y + dh, debugPaint2);
+            
             rightDrawable.draw(canvas);
         }
         if (rightDrawable2 != null && rightDrawableOutside) {
@@ -1138,6 +1161,15 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 y = getPaddingTop() + (textHeight - dh) / 2 + rightDrawableTopPadding;
             }
             rightDrawable2.setBounds(x, y, x + dw, y + dh);
+            
+            // PROFILEDEBUG verifyBadge - Debug background for right drawable 2 (verification badge)
+            if (debugPaint3 == null) {
+                debugPaint3 = new Paint();
+                debugPaint3.setColor(0x880000FF); // Semi-transparent blue
+                debugPaint3.setStyle(Paint.Style.FILL);
+            }
+            canvas.drawRect(x, y, x + dw, y + dh, debugPaint3);
+            
             rightDrawable2.draw(canvas);
         }
     }
