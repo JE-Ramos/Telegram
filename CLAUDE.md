@@ -479,3 +479,73 @@ void setOffset(size_t offset);
 ```
 
 **Usage Context**: Part of Telegram's native VoIP implementation using tgcalls library for iOS call audio management.
+
+## ProfileActivity NameTextView Gravity Fix
+
+### Problem: Left-Aligned Loading Appearance
+**Issue**: During initial loading, `nameTextView[0]` appeared left-aligned despite container centering.
+
+**Root Cause**: Conflicting gravity settings:
+- **Container**: `Gravity.CENTER_HORIZONTAL` (centers TextView within container)
+- **TextView**: `Gravity.LEFT` (aligns text left within TextView)
+- **Result**: Centered TextView with left-aligned text = appears left-positioned
+
+### Solution: Align Text Content Gravity
+**Fix**: Changed TextView internal gravity to match container centering:
+```java
+// Before: Text aligned left within centered TextView container
+nameTextView[a].setGravity(Gravity.LEFT);
+
+// After: Text aligned center within centered TextView container  
+nameTextView[a].setGravity(Gravity.CENTER);
+```
+
+### Impact
+- **nameTextView[0]**: Animation layer starts from correct centered position
+- **nameTextView[1]**: Visible layer displays centered from initial load
+- **Loading State**: No more leftmost positioning during data loading
+- **Consistency**: Both layers use unified centering approach
+
+### Technical Details
+- **Timing**: View creation happens before `updateRowsIds()` data population
+- **Gravity Hierarchy**: Container gravity + TextView gravity = final positioning
+- **Animation**: `nameTextView[0]` alpha transitions from correct centered start position
+
+## ProfileActivity NameTextView Animation Alignment Fix
+
+### Problem: Misaligned Animation Layers
+**Issue**: `nameTextView[0]` (animation layer) and `nameTextView[1]` (visible layer) had different layout parameters causing misalignment during animations.
+
+**Root Cause**: Different layout constraints:
+```java
+// nameTextView[0]: Fixed width + right margin
+avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(
+    a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT,  // Different widths
+    LayoutHelper.WRAP_CONTENT, 
+    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
+    0, 44, 
+    (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0  // Different margins
+));
+```
+
+### Solution: Identical Layout Parameters
+**Fix**: Both layers now use identical constraints for synchronized animation paths:
+```java
+// Both layers: Same width + same margins
+avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(
+    LayoutHelper.WRAP_CONTENT,  // Same width for both
+    LayoutHelper.WRAP_CONTENT, 
+    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
+    0, 44, 
+    0, 0  // Same margins for both
+));
+```
+
+### Impact
+- **Same Animation Path**: Both views follow identical movement trajectories
+- **Perfect Overlap**: Animation and visible layers align perfectly when content matches
+- **Smooth Transitions**: No jitter or position jumps during alpha crossfades
+- **Consistent Centering**: Both layers center using same calculation method
+
+### Key Principle
+For smooth multi-layer animations, **all layers must have identical layout constraints** to ensure they move along the same path during transformations.
