@@ -124,6 +124,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -323,7 +325,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         PHONE_OPTION_TELEGRAM_VIDEO_CALL = 3;
     
     // Profile header collapsed height constant
-    private static final int PROFILE_HEADER_COLLAPSED_HEIGHT_DP = 88;
+    private static final int PROFILE_HEADER_COLLAPSED_HEIGHT_DP = 125;
 
     private RecyclerListView listView;
     private RecyclerListView searchListView;
@@ -5201,7 +5203,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
             nameTextView[a].setRightDrawableOutside(a == 0);
-            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, -6, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
+            // dynamic nametextview left margin
+            int nameLeftMargin = 118 - (nameTextView[a].getSideDrawablesSize() / 2);
+            Log.d("ProfileDebug", "nameLeftMargin :" + nameLeftMargin + " getSideDrawablesSize: " + nameTextView[a].getSideDrawablesSize());
+            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, nameLeftMargin, 44, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
         }
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {

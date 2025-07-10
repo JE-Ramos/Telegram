@@ -332,3 +332,44 @@ The curved trajectory results from the non-linear Y position formula that combin
 - Action bar height multiplication by `(1.0f + diff)`
 - Linear movement component `27 * density * diff`
 - This creates a parabolic path where the avatar moves down-left in a smooth curve
+
+## ProfileActivity Avatar Circular Shape and Scaling
+
+### How Avatar Becomes Circular
+
+The avatar's circular shape is controlled by the `setRoundRadius()` method:
+
+**Round Radius Setting (ProfileActivity.java:5015)**:
+```java
+avatarImage.setRoundRadius(getSmallAvatarRoundRadius());
+```
+
+**Default Radius Calculation (ProfileActivity.java:5878-5886)**:
+```java
+private int getSmallAvatarRoundRadius() {
+    if (chatId != 0) {
+        TLRPC.Chat chatLocal = getMessagesController().getChat(chatId);
+        if (ChatObject.isForum(chatLocal)) {
+            return AndroidUtilities.dp(needInsetForStories() ? 11 : 16);
+        }
+    }
+    return AndroidUtilities.dp(12);  // Half of 24dp avatar size for perfect circle
+}
+```
+
+### Avatar Size and Scaling
+
+**Container Setup**: 24dp × 24dp initial size
+**Image View**: Uses `MATCH_PARENT` to fill container
+**Minimum Scale**: ~1.43x applied even when collapsed (`avatarScale = (42 + 18) / 42`)
+
+### Why 48dp Radius Was Needed
+
+When the user increased avatar size but it became "squarish circle", this was because:
+1. The avatar container has a minimum scale of 1.43x applied
+2. Container: 24dp × 1.43 = ~34dp minimum display size
+3. The avatar can scale up to 2.43x during expansion
+4. The actual rendered size with scaling is much larger than the base 24dp
+5. A 48dp radius creates a perfect circle, suggesting ~96dp actual rendered size
+
+**Key Insight**: The avatar's displayed size is affected by `avatarScale` transformations, making it appear larger than its defined container size.
