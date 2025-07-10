@@ -417,3 +417,65 @@ onlineX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avat
 - Both `avatarContainer` and `nameTextView` use `Gravity.CENTER_HORIZONTAL` with matching 36dp base offset
 - Animation calculations adjusted to maintain smooth transitions during header expansion
 - Works well for communities and channels where centered layout improves readability
+
+## ProfileActivity NameTextView Centering Fix
+
+### Problem: Manual Margin Calculation
+**Issue**: Originally used `getSideDrawablesSize()` for margin calculation during view creation, but this returned 0 because drawables weren't set yet.
+
+```java
+// WRONG - Called during view creation before drawables are set
+int nameLeftMargin = baseOffset - (nameTextView[a].getSideDrawablesSize() / 2);
+```
+
+### Solution: Proper Centering
+**Fix**: Removed manual margin calculation and used proper `Gravity.CENTER_HORIZONTAL` like the avatar container.
+
+```java
+// CORRECT - Let framework handle centering
+avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(
+    a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, 
+    LayoutHelper.WRAP_CONTENT, 
+    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
+    0, 44, // leftMargin = 0, let gravity handle it
+    (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0
+));
+```
+
+### Key Insights
+- **Timing Issue**: View creation happens before drawable assignment in `updateRowsIds()`
+- **Framework Centering**: `Gravity.CENTER_HORIZONTAL` handles centering automatically
+- **Drawable Positioning**: SimpleTextView handles drawable positioning internally
+- **Consistency**: Both avatar and nameTextView now use the same centering approach
+
+### Debug Features Added
+- **Debug colors** in SimpleTextView for drawable areas (red=left, green=right, blue=right2)
+- **PROFILEDEBUG comments** for easy searching of drawable-related code
+- **Logging** for bot verification and encrypted chat margin adjustments
+
+## Native Audio Components
+
+### CallAudioTone.h (TMessagesProj/jni/voip/tgcalls/platform/darwin/iOS/)
+
+**Purpose**: Handles audio tone playback for VoIP calls on iOS platform
+
+**Key Features**:
+- **Sample Storage**: `std::vector<int16_t> _samples` - Audio sample data
+- **Sample Rate**: Default 48kHz (`_sampleRate = 48000`)
+- **Loop Control**: `_loopCount` for repeating tones
+- **Playback Position**: `_offset` for current playback position
+
+**Methods**:
+```cpp
+// Getters
+std::vector<int16_t> const samples() const;
+int sampleRate() const;
+int loopCount() const;
+size_t offset() const;
+
+// Setters
+void setLoopCount(int loopCount);
+void setOffset(size_t offset);
+```
+
+**Usage Context**: Part of Telegram's native VoIP implementation using tgcalls library for iOS call audio management.
