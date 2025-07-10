@@ -597,3 +597,42 @@ This establishes the **baseline centering system** that can be extended to handl
 - **No manual calculations**: Eliminates timing-dependent margin adjustments
 - **Consistent behavior**: Same logic path for all profile types
 - **Animation-ready**: Both layers follow identical positioning rules
+
+## ProfileActivity Fluctuation Fix - Complete Solution
+
+### Problem: Dynamic Width Override Interference
+**Root Cause**: `needLayoutText()` was dynamically changing nameTextView width from `WRAP_CONTENT` (-2) to fixed pixels (378), interfering with framework centering.
+
+**Fluctuation Pattern**:
+```
+Open → WRAP_CONTENT width → needLayoutText() → Fixed width (378px) → Position shifts
+Close → Reset to WRAP_CONTENT → needLayoutText() → Fixed width again → Different timing = fluctuation
+```
+
+### Solution: Preserve WRAP_CONTENT Integrity
+**Fix Applied**: Completely disabled `needLayoutText()` width calculations for nameTextView to preserve pure framework centering.
+
+```java
+private void needLayoutText(float diff) {
+    // PROFILEDEBUG - Skip width override to preserve WRAP_CONTENT centering
+    Log.d("ProfileDebug", "needLayoutText - SKIPPING width calculation to preserve WRAP_CONTENT centering");
+    return;
+    // Original width calculation code disabled
+}
+```
+
+### Results Achieved
+- ✅ **Zero fluctuation**: Same positioning on every open/close cycle
+- ✅ **Consistent width**: nameTextView maintains WRAP_CONTENT (-2) always
+- ✅ **Pure framework centering**: Android Gravity.CENTER_HORIZONTAL works uninterrupted
+- ✅ **Debug verified**: Logs show no more "WIDTH CHANGED" messages
+- ✅ **Stable foundation**: Ready for drawable centering solutions
+
+### Key Insight
+**Framework centering requires stable layout parameters**. Any dynamic width modifications break the centering contract and cause position instability.
+
+### Next Phase: Drawable Centering
+With stable text centering achieved, the focus shifts to:
+- Left drawable positioning (bot verification icons)
+- Right drawable positioning (emoji status + verification badges)
+- Multiple drawable coordination and alignment
