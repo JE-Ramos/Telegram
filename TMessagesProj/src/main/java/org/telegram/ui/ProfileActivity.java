@@ -5862,7 +5862,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
         }
 
-        needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP)));
+        float diffValue = Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP));
+        Log.d("ProfileDebug", "Calling needLayoutText from setAvatar area - diffValue=" + diffValue);
+        needLayoutText(diffValue);
 
         nameTextView[1].setTextColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), Color.WHITE, currentExpandAnimatorValue));
         actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), Color.WHITE, value), false);
@@ -7010,7 +7012,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             updateEmojiStatusDrawableColor();
 
             if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && (videoCallItemVisible || editItemVisible || callItemVisible)) {
-                needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP)));
+                float diffValue = Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP));
+        Log.d("ProfileDebug", "Calling needLayoutText from setAvatar area - diffValue=" + diffValue);
+        needLayoutText(diffValue);
             }
         }
 
@@ -7783,6 +7787,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
             if (!openAnimationInProgress && (expandAnimator == null || !expandAnimator.isRunning())) {
+                Log.d("ProfileDebug", "Calling needLayoutText from needLayout - diff=" + diff + ", openAnimationInProgress=" + openAnimationInProgress);
                 needLayoutText(diff);
             }
         }
@@ -7886,9 +7891,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void needLayoutText(float diff) {
+        Log.d("ProfileDebug", "needLayoutText called - diff=" + diff + ", extraHeight=" + extraHeight);
+        
+        // PROFILEDEBUG - Skip width override to preserve WRAP_CONTENT centering
+        Log.d("ProfileDebug", "needLayoutText - SKIPPING width calculation to preserve WRAP_CONTENT centering");
+        return;
+        
+        // Original width calculation code preserved but disabled
+        /*
         FrameLayout.LayoutParams layoutParams;
         float scale = nameTextView[1].getScaleX();
         float maxScale = extraHeight > AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP) ? 1.67f : 1.12f;
+        Log.d("ProfileDebug", "needLayoutText - scale=" + scale + ", maxScale=" + maxScale);
 
         if (extraHeight > AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP) && scale != maxScale) {
             return;
@@ -7916,14 +7930,27 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         float width2 = nameTextView[1].getPaint().measureText(nameTextView[1].getText().toString()) * scale + nameTextView[1].getSideDrawablesSize();
         layoutParams = (FrameLayout.LayoutParams) nameTextView[1].getLayoutParams();
         int prevWidth = layoutParams.width;
+        
+        Log.d("ProfileDebug", "needLayoutText - Before width calc: prevWidth=" + prevWidth + ", width=" + width + ", width2=" + width2 + ", scale=" + scale + ", getSideDrawablesSize=" + nameTextView[1].getSideDrawablesSize());
+        
         if (width < width2) {
             layoutParams.width = Math.max(minWidth, (int) Math.ceil((width - AndroidUtilities.dp(24)) / (scale + ((maxScale - scale) * 7.0f))));
+            Log.d("ProfileDebug", "needLayoutText - width < width2 case: newWidth=" + layoutParams.width + ", minWidth=" + minWidth);
         } else {
             layoutParams.width = (int) Math.ceil(width2);
+            Log.d("ProfileDebug", "needLayoutText - width >= width2 case: newWidth=" + layoutParams.width);
         }
+        
+        int beforeFinalWidth = layoutParams.width;
         layoutParams.width = (int) Math.min((viewWidth - nameTextView[1].getX()) / scale - AndroidUtilities.dp(8), layoutParams.width);
+        
+        Log.d("ProfileDebug", "needLayoutText - Final width calc: beforeFinal=" + beforeFinalWidth + ", finalWidth=" + layoutParams.width + ", nameTextViewX=" + nameTextView[1].getX());
+        
         if (layoutParams.width != prevWidth) {
+            Log.d("ProfileDebug", "needLayoutText - WIDTH CHANGED! Requesting layout: " + prevWidth + " -> " + layoutParams.width);
             nameTextView[1].requestLayout();
+        } else {
+            Log.d("ProfileDebug", "needLayoutText - Width unchanged: " + layoutParams.width);
         }
 
         width2 = onlineTextView[1].getPaint().measureText(onlineTextView[1].getText().toString()) + onlineTextView[1].getRightDrawableWidth();
@@ -7944,6 +7971,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[1].requestLayout();
             mediaCounterTextView.requestLayout();
         }
+        */
     }
 
     private void fixLayout() {
@@ -10073,39 +10101,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 if (leftIcon == null && currentEncryptedChat == null && user.bot_verification_icon != 0) {
-                    Log.d("ProfileDebug", "Bot verification case - a=" + a + ", user.bot_verification_icon=" + user.bot_verification_icon);
+                    // PROFILEDEBUG - Bot verification case, let framework handle centering
                     nameTextView[a].setLeftDrawableOutside(true);
                     leftIcon = getBotVerificationDrawable(user.bot_verification_icon, false, a);
-                    Log.d("ProfileDebug", "leftIcon created: " + (leftIcon != null ? "yes, width=" + leftIcon.getIntrinsicWidth() : "null"));
-                    // Adjust left margin to account for outside drawable centering
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-                    if (layoutParams != null && leftIcon != null) {
-                        int outsideDrawableWidth = leftIcon.getIntrinsicWidth();
-                        int oldMargin = layoutParams.leftMargin;
-                        layoutParams.leftMargin = AndroidUtilities.dp(36) - (outsideDrawableWidth / 2);
-                        Log.d("ProfileDebug", "Bot verification margin adjustment - a=" + a + ", oldMargin=" + oldMargin + ", newMargin=" + layoutParams.leftMargin + ", drawableWidth=" + outsideDrawableWidth);
-                        nameTextView[a].setLayoutParams(layoutParams);
-                    } else {
-                        Log.d("ProfileDebug", "No margin adjustment - layoutParams=" + (layoutParams != null) + ", leftIcon=" + (leftIcon != null));
-                    }
                 } else {
-                    Log.d("ProfileDebug", "Not bot verification case - a=" + a + ", leftIcon=" + (leftIcon != null) + ", currentEncryptedChat=" + (currentEncryptedChat != null) + ", bot_verification_icon=" + user.bot_verification_icon);
                     nameTextView[a].setLeftDrawableOutside(false);
                 }
                 nameTextView[a].setLeftDrawable(leftIcon);
-                
-                // Adjust left margin for regular left drawables (encrypted chat lock icon)
-                // This handles cases where leftIcon exists but is NOT set as outside drawable
-                if (leftIcon != null && currentEncryptedChat != null) {
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-                    if (layoutParams != null) {
-                        int leftDrawableWidth = leftIcon.getIntrinsicWidth();
-                        int oldMargin = layoutParams.leftMargin;
-                        layoutParams.leftMargin = AndroidUtilities.dp(36) - (leftDrawableWidth / 2);
-                        Log.d("ProfileDebug", "Encrypted chat margin adjustment - a=" + a + ", oldMargin=" + oldMargin + ", newMargin=" + layoutParams.leftMargin + ", drawableWidth=" + leftDrawableWidth);
-                        nameTextView[a].setLayoutParams(layoutParams);
-                    }
-                }
+                // PROFILEDEBUG - Let framework handle centering for all drawable cases
                 
                 if (a == 1 && (rightIconIsStatus || rightIconIsPremium)) {
                     nameTextView[a].setRightDrawableOutside(true);
@@ -10418,13 +10421,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     nameTextView[a].setLeftDrawableOutside(true);
                     Drawable botVerificationDrawable = getBotVerificationDrawable(chat.bot_verification_icon, false, a);
                     nameTextView[a].setLeftDrawable(botVerificationDrawable);
-                    // Adjust left margin to account for outside drawable centering
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-                    if (layoutParams != null && botVerificationDrawable != null) {
-                        int outsideDrawableWidth = botVerificationDrawable.getIntrinsicWidth();
-                        layoutParams.leftMargin = AndroidUtilities.dp(36) - (outsideDrawableWidth / 2);
-                        nameTextView[a].setLayoutParams(layoutParams);
-                    }
+                    // PROFILEDEBUG - Let framework handle centering for chat bot verification
                 } else {
                     nameTextView[a].setLeftDrawable(null);
                 }
