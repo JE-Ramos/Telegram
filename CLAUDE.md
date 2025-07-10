@@ -549,3 +549,51 @@ avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(
 
 ### Key Principle
 For smooth multi-layer animations, **all layers must have identical layout constraints** to ensure they move along the same path during transformations.
+
+## ProfileActivity Perfect NameTextView Centering Achievement
+
+### Milestone: Perfect Centering for Profiles Without Drawables
+**Achievement**: Successfully implemented perfect horizontal centering for nameTextView when no left or right drawables are present.
+
+### Complete Solution Stack
+**1. TextView Internal Gravity Fix**:
+```java
+// Fixed text alignment within TextView
+nameTextView[a].setGravity(Gravity.CENTER); // Was: Gravity.LEFT
+```
+
+**2. Identical Layout Parameters**:
+```java
+// Both layers use identical constraints
+avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(
+    LayoutHelper.WRAP_CONTENT,  // Same width for both layers
+    LayoutHelper.WRAP_CONTENT, 
+    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
+    0, 44,  // leftMargin = 0, topMargin = 44dp
+    0, 0    // rightMargin = 0, bottomMargin = 0
+));
+```
+
+**3. Container Centering**:
+- `avatarContainer2` uses `Gravity.CENTER_HORIZONTAL` for child positioning
+- No manual margin calculations that interfere with framework centering
+- Clean separation between container gravity and content gravity
+
+### Verified Working Cases
+- ✅ **Plain text profiles** (no drawables): Perfect center alignment
+- ✅ **Bot profiles without verification**: Perfect center alignment
+- ✅ **Basic user profiles**: Perfect center alignment
+- ✅ **Animation layer synchronization**: Both nameTextView[0] and nameTextView[1] align perfectly
+
+### Foundation for Complex Cases
+This establishes the **baseline centering system** that can be extended to handle:
+- Profiles with single drawables (verification badges only)
+- Profiles with multiple drawables (emoji + verification)
+- Profiles with left drawables (bot verification icons)
+- Mixed drawable combinations
+
+### Technical Achievement
+- **Framework-based centering**: Uses Android's native Gravity system
+- **No manual calculations**: Eliminates timing-dependent margin adjustments
+- **Consistent behavior**: Same logic path for all profile types
+- **Animation-ready**: Both layers follow identical positioning rules
