@@ -4896,6 +4896,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         animatedStatusView.setPivotY(AndroidUtilities.dp(30));
 
         avatarContainer = new FrameLayout(context);
+        // Debug border for avatar container
+        avatarContainer.setBackgroundColor(0xFF00FF00); // Green border
+        avatarContainer.setPadding(2, 2, 2, 2);
         avatarContainer2 = new FrameLayout(context) {
 
             CanvasButton canvasButton;
@@ -4981,7 +4984,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         frameLayout.addView(avatarContainer2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.START, 0, 0, 0, 0));
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
-        avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, 64, 0, 0, 0));
+        // Position avatar at top center of screen
+        int avatarSize = AndroidUtilities.dp(24);
+        int centerX = avatarSize + AndroidUtilities.dp(12);
+        avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(avatarSize, avatarSize,  Gravity.CENTER_HORIZONTAL, centerX / AndroidUtilities.density, -centerX  / AndroidUtilities.density, 0, 0));
         avatarImage = new AvatarImageView(context) {
             @Override
             public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
@@ -5876,7 +5882,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 return AndroidUtilities.dp(needInsetForStories() ? 11 : 16);
             }
         }
-        return AndroidUtilities.dp(21);
+        return AndroidUtilities.dp(48);  // Half of 24dp avatar size for perfect circle
     }
 
     private void updateTtlIcon() {
