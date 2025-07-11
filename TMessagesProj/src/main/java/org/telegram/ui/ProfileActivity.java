@@ -5205,6 +5205,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setRightDrawableOutside(a == 0);
             
             // PROFILEDEBUG - Use identical layout parameters for both layers to ensure same animation path
+            // nameTextView2 initial setup
             avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 44, 0, 0));
         }
         for (int a = 0; a < onlineTextView.length; a++) {
@@ -5250,7 +5251,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a].setEllipsizeByGradient(true);
             onlineTextView[a].setTextColor(applyPeerColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue), true, null));
             onlineTextView[a].setTextSize(14);
-            onlineTextView[a].setGravity(Gravity.LEFT);
+            onlineTextView[a].setGravity(Gravity.CENTER);
             onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
             if (a == 1 || a == 2 || a == 3) {
                 onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
@@ -5259,7 +5260,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
             onlineTextView[a].setFocusable(a == 0);
-            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118 - (a == 1 || a == 2 || a == 3? 4 : 0), (a == 1 || a == 2 || a == 3 ? -2 : 0), (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 8) - (a == 1 || a == 2 || a == 3 ? 4 : 0), 0));
+            // old left margin 118 - (a == 1 || a == 2 || a == 3? 4 : 0)
+            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 52, 0, 0));
         }
         checkPhotoDescriptionAlpha();
         avatarContainer2.addView(animatedStatusView);
@@ -7598,7 +7600,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (openAnimationInProgress && playProfileAnimation == 2) {
                             additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
                         }
-                        onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
+                        onlineX = 0; // Keep centered positioning
                         nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
                         nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
                         onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
@@ -7760,7 +7762,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 nameX = -21 * AndroidUtilities.density * diff;
                 nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineX = -21 * AndroidUtilities.density * diff;
+                onlineX = 0; // Keep centered positioning
                 onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
@@ -7882,7 +7884,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         nameX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
         nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7f) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
         // Adjust onlineX calculation to match nameX centering
-        onlineX = AndroidUtilities.dp(-47f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
+        onlineX = AndroidUtilities.dp(0f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
         onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
     }
 

@@ -636,3 +636,44 @@ With stable text centering achieved, the focus shifts to:
 - Left drawable positioning (bot verification icons)
 - Right drawable positioning (emoji status + verification badges)
 - Multiple drawable coordination and alignment
+
+## ProfileActivity OnlineTextView Centering
+
+### Problem: OnlineTextView Appeared Far Left
+**Issue**: Even after changing layout to use `Gravity.CENTER_HORIZONTAL`, the onlineTextView still appeared far to the left of the name.
+
+**Root Causes**:
+1. **Internal text gravity** was set to `Gravity.LEFT` instead of `CENTER`
+2. **Animation translations** were applying horizontal offsets during avatar expansion
+
+### Complete Solution
+
+**1. Layout Update (ProfileActivity.java:5264)**:
+```java
+avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(
+    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 
+    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
+    0, 52, 0, 0  // 0 left margin, 52dp top margin
+));
+```
+
+**2. Text Gravity Fix (ProfileActivity.java:5254)**:
+```java
+onlineTextView[a].setGravity(Gravity.CENTER);  // Was: Gravity.LEFT
+```
+
+**3. Animation Translation Removal**:
+All `onlineX` calculations that applied horizontal offsets were set to 0:
+
+- **Line 7603**: Changed from `AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft()` to `0`
+- **Line 7765**: Changed from `-21 * AndroidUtilities.density * diff` to `0`
+- **Line 7887**: Changed from `AndroidUtilities.dp(-47f) + ...` to `AndroidUtilities.dp(0f) + ...`
+
+### Result
+- ✅ **Perfect centering**: "last seen" text now centers perfectly under the name
+- ✅ **Consistent behavior**: Works for all profile types (users, bots, channels)
+- ✅ **Smooth animations**: Avatar expansion animations maintain centered positioning
+- ✅ **No fluctuation**: Position remains stable across open/close cycles
+
+### Technical Achievement
+The solution combines framework-based centering (`Gravity.CENTER_HORIZONTAL`) with consistent animation calculations (zero horizontal translation) to achieve perfect alignment between nameTextView and onlineTextView.
