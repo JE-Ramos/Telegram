@@ -341,6 +341,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private AnimatorSet writeButtonAnimation;
     private FrameLayout profileButtonContainer;
     private AnimatorSet profileButtonContainerAnimation;
+    // REMOVED: expandedProfileButtonContainer
     private AnimatorSet qrItemAnimation;
     private Drawable lockIconDrawable;
     private final Drawable[] verifiedDrawable = new Drawable[2];
@@ -409,10 +410,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean doNotSetForeground;
     
-    // PROFILEDEBUG - Custom drawable overlay system fields
-    private FrameLayout customRightDrawableContainer;
-    private ImageView customRightDrawableView;
-    private ImageView customRightDrawable2View;
 
     private boolean[] isOnline = new boolean[1];
 
@@ -4908,9 +4905,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         animatedStatusView.setPivotY(AndroidUtilities.dp(30));
 
         avatarContainer = new FrameLayout(context);
-        // Debug border for avatar container
-        avatarContainer.setBackgroundColor(0xFF00FF00); // Green border
-        avatarContainer.setPadding(2, 2, 2, 2);
         avatarContainer2 = new FrameLayout(context) {
 
             CanvasButton canvasButton;
@@ -4995,7 +4989,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         AndroidUtilities.updateViewVisibilityAnimated(avatarContainer2, true, 1f, false);
         frameLayout.addView(avatarContainer2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.START, 0, 0, 0, 0));
         // Position avatar at top center of screen
-        int avatarSize = AndroidUtilities.dp(24);
+        int avatarSize = AndroidUtilities.dp(42);
         int centerX = avatarSize + AndroidUtilities.dp(12);
         avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(avatarSize, avatarSize,  Gravity.CENTER_HORIZONTAL, centerX / AndroidUtilities.density, -centerX  / AndroidUtilities.density, 0, 0));
         avatarImage = new AvatarImageView(context) {
@@ -5190,6 +5184,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         updateCollectibleHint();
                     }
                 }
+                
             };
             if (a == 1) {
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_profile_title));
@@ -5198,7 +5193,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_profile_title));
             } else if (a == 3) {
                 // Action bar version for collapsed state
-                nameTextView[a].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
+                nameTextView[a].setTextColor(Color.RED); // PROFILEDEBUG - Make action bar text visible
             } else {
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
             }
@@ -5207,7 +5202,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (a == 2) {
                 nameTextView[a].setGravity(Gravity.LEFT); // PROFILEDEBUG - Left-aligned for expanded state
             } else if (a == 3) {
-                nameTextView[a].setGravity(Gravity.CENTER); // PROFILEDEBUG - Center text for action bar
+                nameTextView[a].setGravity(Gravity.LEFT); // PROFILEDEBUG - Center text for action bar
             } else {
                 nameTextView[a].setGravity(Gravity.CENTER); // PROFILEDEBUG - Center text within TextView to match container centering
             }
@@ -5215,7 +5210,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setLeftDrawableTopPadding(-AndroidUtilities.dp(1.3f));
             nameTextView[a].setPivotX(0);
             nameTextView[a].setPivotY(0);
-            nameTextView[a].setAlpha(a == 0 || a == 2 ? 0.0f : 1.0f); // Hide left-aligned version initially, show action bar for testing
+            nameTextView[a].setAlpha(a == 0 || a == 2 || a == 3 ? 0.0f : 1.0f); // Hide left-aligned and action bar versions initially
             if (a == 1) {
                 nameTextView[a].setScrollNonFitText(true);
                 nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -5223,14 +5218,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 // Left-aligned version configuration
                 nameTextView[a].setScrollNonFitText(true);
                 nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-                // PROFILEDEBUG - Add cyan debug border
-                nameTextView[a].setBackgroundColor(0x4400FFFF); // Cyan with alpha
+                // PROFILEDEBUG - Add cyan debug border for expanded state
+                // REMOVED: Debug cyan background
             } else if (a == 3) {
                 // Action bar version configuration
                 nameTextView[a].setScrollNonFitText(true);
                 nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-                // PROFILEDEBUG - Add yellow debug border
-                nameTextView[a].setBackgroundColor(0x44FFFF00); // Yellow with alpha
+                // PROFILEDEBUG - Add yellow debug border for action bar
+                // REMOVED: Debug yellow background
             }
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
@@ -5246,38 +5241,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 // Action bar version positioned in action bar area
                 // Position: centered in action bar height area (about 56dp from top)
                 // nameTextView[3] position
-                avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0, 0, 0));
+                avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 16, 80, 0, 0));
             } else {
                 avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 44, 0, 0));
             }
         }
-        
-        // PROFILEDEBUG - Custom drawable overlay system for ProfileActivity
-        // This system creates dedicated overlay views for right drawables that are always positioned on the right
-        // without touching the core SimpleTextView logic used by other screens
-        
-        // Create overlay containers for right drawables
-        customRightDrawableContainer = new FrameLayout(context);
-        customRightDrawableContainer.setClipChildren(false);
-        customRightDrawableContainer.setClipToPadding(false);
-        customRightDrawableContainer.setBackgroundColor(0x44FF0000); // Debug: Red background with alpha
-        avatarContainer2.addView(customRightDrawableContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        Log.d("ProfileDebug", "Created customRightDrawableContainer with MATCH_PARENT dimensions");
-        
-        // Create individual overlay views for each drawable type
-        customRightDrawableView = new ImageView(context);
-        customRightDrawableView.setScaleType(ImageView.ScaleType.CENTER);
-        customRightDrawableView.setVisibility(View.GONE);
-        customRightDrawableView.setBackgroundColor(0x4400FF00); // Debug: Green background with alpha
-        customRightDrawableContainer.addView(customRightDrawableView, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 16, 0));
-        Log.d("ProfileDebug", "Created customRightDrawableView at position RIGHT|TOP with margins (0,44,16,0)");
-        
-        customRightDrawable2View = new ImageView(context);
-        customRightDrawable2View.setScaleType(ImageView.ScaleType.CENTER);
-        customRightDrawable2View.setVisibility(View.GONE);
-        customRightDrawable2View.setBackgroundColor(0x440000FF); // Debug: Blue background with alpha
-        customRightDrawableContainer.addView(customRightDrawable2View, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 40, 0));
-        Log.d("ProfileDebug", "Created customRightDrawable2View at position RIGHT|TOP with margins (0,44,40,0)");
         
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
@@ -5333,20 +5301,27 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             onlineTextView[a].setEllipsizeByGradient(true);
             onlineTextView[a].setTextColor(applyPeerColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue), true, null));
+            // PROFILEDEBUG - Override color for action bar version
+            // REMOVED: Debug blue color for action bar online text
             onlineTextView[a].setTextSize(14);
             if (a == 4) {
                 onlineTextView[a].setGravity(Gravity.LEFT); // PROFILEDEBUG - Left-aligned for expanded state
             } else {
                 onlineTextView[a].setGravity(Gravity.CENTER);
             }
-            onlineTextView[a].setAlpha(a == 0 || a == 4 ? 0.0f : 1.0f); // Hide left-aligned version initially, show action bar for testing
+            onlineTextView[a].setAlpha(a == 0 || a == 4 || a == 5 ? 0.0f : 1.0f); // Hide left-aligned and action bar versions initially
             if (a == 1 || a == 2 || a == 3) {
                 onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
             } else if (a == 4) {
                 // Left-aligned version for expanded state
                 onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
-                // PROFILEDEBUG - Add pink debug border
-                onlineTextView[a].setBackgroundColor(0x44FF00FF); // Pink with alpha
+                // PROFILEDEBUG - Add pink debug border for expanded state
+                // REMOVED: Debug pink background
+            } else if (a == 5) {
+                // Action bar version for collapsed state
+                onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
+                // PROFILEDEBUG - Add orange debug border for action bar
+                // REMOVED: Debug orange background
             }
             if (a > 0) {
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -5359,7 +5334,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (a == 5) {
                 // Action bar version positioned in action bar area
                 // Position: centered below nameTextView[3] in action bar
-                avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0, 0, 0));
+                avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 16, 100, 0, 0));
             } else {
                 avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 52, 0, 0));
             }
@@ -5451,6 +5426,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         profileButtonContainer.addView(buttonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         
         frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
+        
+        // REMOVED: expandedProfileButtonContainer creation
         
         // Populate profile action buttons
         updateProfileActionButtons();
@@ -5602,8 +5579,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (sharedMediaLayout != null && sharedMediaLayout.getCurrentListView() != null) {
                     sharedMediaLayout.getCurrentListView().cancelClickRunnables(true);
                 }
-                // INITIATIVE 2 BIG PROFILE EXPAND - Set red background for topView visibility
-                topView.setBackgroundColor(Color.RED);
             }
         });
         avatarsViewPager.setPinchToZoomHelper(pinchToZoomHelper);
@@ -5996,7 +5971,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 return AndroidUtilities.dp(needInsetForStories() ? 11 : 16);
             }
         }
-        return AndroidUtilities.dp(48);  // Half of 24dp avatar size for perfect circle
+        return AndroidUtilities.dp(48);
     }
 
     private void updateTtlIcon() {
@@ -7486,6 +7461,31 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             
             // Action bar text views visible when collapsed
             boolean actionBarTextVisible = diff <= 0.2f && !searchMode;
+            
+            // Set ActionBar title and subtitle when collapsed
+            if (actionBarTextVisible) {
+                // Get current text from main text views
+                String userName = nameTextView[1] != null ? nameTextView[1].getText().toString() : "";
+                String userStatus = onlineTextView[1] != null ? onlineTextView[1].getText().toString() : "";
+                
+                actionBar.setTitle(userName);
+                // Hide subtitle when posts are sticky - keep action bar clean
+                actionBar.setSubtitle("");
+                
+                // When action bar text is visible, ensure profile text views are completely hidden
+                if (nameTextView[1] != null) {
+                    nameTextView[1].setAlpha(0.0f);
+                }
+                if (onlineTextView[1] != null) {
+                    onlineTextView[1].setAlpha(0.0f);
+                }
+                
+                // Colors will be set by the dynamic color update method that matches nameTextView[1] and onlineTextView[1] logic
+            } else {
+                // Clear ActionBar title when expanded
+                actionBar.setTitle("");
+                actionBar.setSubtitle("");
+            }
 
             if (writeButton != null) {
                 writeButton.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset - AndroidUtilities.dp(29.5f));
@@ -7535,6 +7535,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 // Apply squeeze effect and position
                 profileButtonContainer.setScaleY(scaleY);
                 profileButtonContainer.setTranslationY(adjustedContainerY);
+                
+                // INITIATIVE 2 BIG PROFILE EXPAND - Update background based on avatar state
+                updateProfileButtonContainerBackground();
+                
+                // REMOVED: expandedProfileButtonContainer logic
                 if (!openAnimationInProgress) {
                     boolean currentVisible = profileButtonContainer.getTag() == null;
                     if (profileButtonContainerVisible != currentVisible) {
@@ -7680,31 +7685,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 
-                // PROFILEDEBUG - Show/hide action bar views when collapsed
-                // TEMPORARILY DISABLED FOR TESTING - action bar views always visible
-                /*
-                if (actionBarTextVisible) {
-                    // Show action bar views when collapsed
-                    if (nameTextView[3] != null) {
-                        nameTextView[3].setAlpha(1f);
-                        nameTextView[1].setAlpha(0f);
-                    }
-                    if (onlineTextView[5] != null) {
-                        onlineTextView[5].setAlpha(1f);
-                        onlineTextView[1].setAlpha(0f);
-                    }
-                } else {
-                    // Hide action bar views when expanded
-                    if (nameTextView[3] != null) {
-                        nameTextView[3].setAlpha(0f);
-                        nameTextView[1].setAlpha(1f);
-                    }
-                    if (onlineTextView[5] != null) {
-                        onlineTextView[5].setAlpha(0f);
-                        onlineTextView[1].setAlpha(1f);
-                    }
-                }
-                */
+                // Note: Action bar text views (nameTextView[3], onlineTextView[5]) are now replaced 
+                // by proper ActionBar title/subtitle functionality above
                 
                 if (storyView != null) {
                     storyView.invalidate();
@@ -7762,8 +7744,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             @Override
                             public void onAnimationEnd(Animator animation) {
                                 expandAnimator.removeListener(this);
-                                // INITIATIVE 2 BIG PROFILE EXPAND - Set green background for topView visibility
-                                topView.setBackgroundColor(Color.GREEN);
                                 avatarContainer.setVisibility(View.GONE);
                                 avatarsViewPager.setVisibility(View.VISIBLE);
                             }
@@ -7964,20 +7944,86 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (nameTextView[a] == null) {
                         continue;
                     }
+                    // Skip action bar text views (they should remain static)
+                    if (a == 3) {
+                        continue;
+                    }
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
                         nameTextView[a].setTranslationX(nameX);
                         nameTextView[a].setTranslationY(nameY);
 
-                        onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
-                        onlineTextView[a].setTranslationY(onlineY);
+                        // Skip onlineTextView[5] for action bar
+                        if (a < onlineTextView.length && a != 5) {
+                            onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
+                            onlineTextView[a].setTranslationY(onlineY);
+                        }
                         if (a == 1) {
                             mediaCounterTextView.setTranslationX(onlineX);
                             mediaCounterTextView.setTranslationY(onlineY);
                         }
+                        
+                        // Seamless fade-out effect for nameTextView[1] and onlineTextView[1]
+                        if (a == 1) {
+                            // Calculate fade alpha: fully visible when diff > 0.3f, fully hidden when diff < 0.2f
+                            float fadeAlpha = 1.0f;
+                            if (diff <= 0.3f) {
+                                // Smooth fade transition between 0.3f and 0.2f
+                                fadeAlpha = Math.max(0.0f, (diff - 0.2f) / 0.1f);
+                            }
+                            nameTextView[a].setAlpha(fadeAlpha);
+                            if (a < onlineTextView.length) {
+                                onlineTextView[a].setAlpha(fadeAlpha);
+                            }
+                        }
                     }
+                    
+                    // Apply fade-out effect even during animations for seamless transition
+                    if (a == 1) {
+                        float fadeAlpha = 1.0f;
+
+                        if (actionBarTextVisible) {
+                            fadeAlpha = 0.0f;
+                        } else if (diff <= 0.3f) {
+                            // Smooth fade transition between 0.3f and 0.2f
+                            fadeAlpha = Math.max(0.0f, (diff - 0.2f) / 0.1f);
+                        }
+                        
+                        nameTextView[a].setAlpha(fadeAlpha);
+                        if (a < onlineTextView.length) {
+                            onlineTextView[a].setAlpha(fadeAlpha);
+                        }
+                    }
+                    
                     nameTextView[a].setScaleX(nameScale);
                     nameTextView[a].setScaleY(nameScale);
                 }
+                
+                // Apply fade-out effect to avatar container when approaching action bar
+                float avatarFadeAlpha = 1.0f;
+                if (actionBarTextVisible) {
+                    avatarFadeAlpha = 0.0f;
+                } else if (diff <= 0.3f) {
+                    // Smooth fade transition between 0.3f and 0.2f
+                    avatarFadeAlpha = Math.max(0.0f, (diff - 0.2f) / 0.1f);
+                }
+                
+                if (avatarContainer != null) {
+                    avatarContainer.setAlpha(avatarFadeAlpha);
+                }
+                
+                // Hide ALL online status text views and media counter when action bar is visible
+                if (actionBarTextVisible) {
+                    for (int i = 0; i < onlineTextView.length; i++) {
+                        if (onlineTextView[i] != null && i != 5) { // Skip onlineTextView[5] (action bar version)
+                            onlineTextView[i].setAlpha(0.0f);
+                        }
+                    }
+                    // Also hide media counter text (like "1 photo", "5 photos", etc.)
+                    if (mediaCounterTextView != null) {
+                        mediaCounterTextView.setAlpha(0.0f);
+                    }
+                }
+                
                 updateCollectibleHint();
             }
 
@@ -7996,8 +8042,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         updateEmojiStatusEffectPosition();
         
-        // PROFILEDEBUG - Update custom drawables after layout changes
-        updateCustomRightDrawables();
     }
 
     public void updateQrItemVisibility(boolean animated) {
@@ -8864,8 +8908,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (SharedConfig.chatBlurEnabled()) {
             actionBarColor = ColorUtils.setAlphaComponent(actionBarColor, 0);
         }
-        // INITIATIVE 2 BIG PROFILE EXPAND - Set blue background for topView visibility
-        topView.setBackgroundColor(Color.BLUE);
         timerDrawable.setBackgroundColor(ColorUtils.blendARGB(actionBarColor2, color, progress));
 
         color = AvatarDrawable.getIconColorForId(userId != 0 || ChatObject.isChannel(chatId, currentAccount) && !currentChat.megagroup ? 5 : chatId, resourcesProvider);
@@ -10068,52 +10110,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    // PROFILEDEBUG - Custom drawable overlay system methods
-    private void updateCustomRightDrawables() {
-        if (customRightDrawableContainer == null || nameTextView[1] == null) {
-            Log.d("ProfileDebug", "updateCustomRightDrawables - SKIP: container or nameTextView[1] is null");
-            return;
-        }
-        
-        // Copy the current drawables from nameTextView[1] to our custom overlay views
-        Drawable rightDrawable = nameTextView[1].getRightDrawable();
-        Drawable rightDrawable2 = nameTextView[1].getRightDrawable2();
-        
-        Log.d("ProfileDebug", "updateCustomRightDrawables - rightDrawable=" + (rightDrawable != null ? rightDrawable.getClass().getSimpleName() : "null") + 
-                               ", rightDrawable2=" + (rightDrawable2 != null ? rightDrawable2.getClass().getSimpleName() : "null"));
-        
-        // Update custom overlay views
-        if (rightDrawable != null) {
-            // Clone the drawable to prevent issues with shared state
-            Drawable clonedDrawable = rightDrawable.getConstantState() != null ? rightDrawable.getConstantState().newDrawable().mutate() : rightDrawable;
-            customRightDrawableView.setImageDrawable(clonedDrawable);
-            customRightDrawableView.setVisibility(View.VISIBLE);
-            Log.d("ProfileDebug", "updateCustomRightDrawables - Set rightDrawable, visibility=VISIBLE");
-        } else {
-            customRightDrawableView.setVisibility(View.GONE);
-            Log.d("ProfileDebug", "updateCustomRightDrawables - No rightDrawable, visibility=GONE");
-        }
-        
-        if (rightDrawable2 != null) {
-            // Clone the drawable to prevent issues with shared state
-            Drawable clonedDrawable2 = rightDrawable2.getConstantState() != null ? rightDrawable2.getConstantState().newDrawable().mutate() : rightDrawable2;
-            customRightDrawable2View.setImageDrawable(clonedDrawable2);
-            customRightDrawable2View.setVisibility(View.VISIBLE);
-            Log.d("ProfileDebug", "updateCustomRightDrawables - Set rightDrawable2, visibility=VISIBLE");
-        } else {
-            customRightDrawable2View.setVisibility(View.GONE);
-            Log.d("ProfileDebug", "updateCustomRightDrawables - No rightDrawable2, visibility=GONE");
-        }
-        
-        // Make sure the container is visible
-        customRightDrawableContainer.setVisibility(View.VISIBLE);
-        
-        // Hide the original drawables in nameTextView to prevent conflicts
-        nameTextView[1].setRightDrawable(null);
-        nameTextView[1].setRightDrawable2(null);
-        
-        Log.d("ProfileDebug", "updateCustomRightDrawables - Cleared original drawables from nameTextView[1]");
-    }
 
     private MessagesController.PeerColor peerColor;
 
@@ -10121,6 +10117,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (avatarContainer == null || nameTextView == null || getParentActivity() == null) {
             return;
         }
+        
         String onlineTextOverride;
         int currentConnectionState = getConnectionsManager().getConnectionState();
         if (currentConnectionState == ConnectionsManager.ConnectionStateWaitingForNetwork) {
@@ -10200,6 +10197,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 params.topMargin = -AndroidUtilities.dp(32);
 
                 avatarContainer.setLayoutParams(params);
+            } else {
+                // PROFILEDEBUG - Reset avatar container to original size for image avatars (only if it was changed)
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+                int originalAvatarSize = AndroidUtilities.dp(42);
+                int centerX = originalAvatarSize + AndroidUtilities.dp(12);
+                
+                // Only reset if size was actually changed from original
+                if (params.width != originalAvatarSize || params.height != originalAvatarSize) {
+                    params.width = params.height = originalAvatarSize;
+                    params.leftMargin = (int) (centerX / AndroidUtilities.density);
+                    params.topMargin = (int) (-centerX / AndroidUtilities.density);
+                    avatarContainer.setLayoutParams(params);
+                    android.util.Log.d("AvatarDebug", "IMAGE AVATAR: Reset to original 42dp size");
+                }
             }
             final ImageLocation videoThumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_VIDEO_BIG);
             VectorAvatarThumbDrawable vectorAvatarThumbDrawable = null;
@@ -10384,8 +10395,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         nameTextView[a].setRightDrawable(null);
                     }
-                    // PROFILEDEBUG - Update custom drawable overlay after setting right drawables for layer 1
-                    updateCustomRightDrawables();
                 }
                 if (leftIcon == null && currentEncryptedChat == null && user.bot_verification_icon != 0) {
                     // PROFILEDEBUG - Bot verification case, let framework handle centering
@@ -10470,7 +10479,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             
             // PROFILEDEBUG - Update custom drawables after user profile loop
-            updateCustomRightDrawables();
 
             if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
                 onlineTextView[2].setText(LocaleController.getString(R.string.FallbackTooltip));
@@ -10638,8 +10646,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     // PROFILEDEBUG - Update custom drawables after copying from chat activity
                     if (a == 1) {
-                        updateCustomRightDrawables();
-                    }
+                                }
                 } else if (isTopic) {
                     CharSequence title = topic == null ? "" : topic.title;
                     try {
@@ -10699,8 +10706,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                     // PROFILEDEBUG - Update custom drawables for chat profiles (layer 1)
-                    updateCustomRightDrawables();
-                } else if (!copyFromChatActivity) {
+                        } else if (!copyFromChatActivity) {
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
                     } else if (chat.verified) {
@@ -10717,8 +10723,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         nameTextView[a].setRightDrawable(null);
                     }
                     // PROFILEDEBUG - Update custom drawables for chat profiles (layer 1)
-                    updateCustomRightDrawables();
-                }
+                        }
                 if (chat.bot_verification_icon != 0) {
                     Log.d("ProfileDebug", "CHAT PROFILE: Setting leftDrawableOutside=TRUE for bot verification, chatId=" + chat.id);
                     nameTextView[a].setLeftDrawableOutside(true);
@@ -10771,7 +10776,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             
             // PROFILEDEBUG - Update custom drawables after chat profile loop
-            updateCustomRightDrawables();
             
             if (changed) {
                 needLayout(true);
@@ -10853,6 +10857,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (actionBar != null) {
             actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), getThemedColor(Theme.key_actionBarActionModeDefaultIcon), mediaHeaderAnimationProgress), false);
             actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(peerColor != null ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), getThemedColor(Theme.key_actionBarActionModeDefaultSelector), mediaHeaderAnimationProgress), false);
+            
+            // Update ActionBar title and subtitle colors to match existing nameTextView[1] and onlineTextView[1] logic
+            actionBar.setTitleColor(ColorUtils.blendARGB(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), getThemedColor(Theme.key_player_actionBarTitle), mediaHeaderAnimationProgress), Color.WHITE, currentExpandAnimatorValue));
+            
+            // Match onlineTextView[1] color logic
+            int statusColor;
+            if (isOnline != null && isOnline[0] && peerColor == null) {
+                statusColor = getThemedColor(Theme.key_profile_status);
+            } else {
+                statusColor = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
+            }
+            actionBar.setSubtitleColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, isOnline != null ? isOnline[0] : false), 0xB3FFFFFF, currentExpandAnimatorValue));
         }
         if (verifiedDrawable[1] != null) {
             final int color1 = peerColor != null ? Theme.adaptHSV(ColorUtils.blendARGB(peerColor.getColor2(), peerColor.hasColor6(Theme.isCurrentThemeDark()) ? peerColor.getColor5() : peerColor.getColor3(), .4f), +.1f, Theme.isCurrentThemeDark() ? -.1f : -.08f) : getThemedColor(Theme.key_profile_verifiedBackground);
@@ -14248,8 +14264,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void updateProfileButtonContainerBackground() {
         if (profileButtonContainer == null) return;
         try {
-            // INITIATIVE 2 BIG PROFILE EXPAND - Remove background, topView will provide it
-            profileButtonContainer.setBackgroundColor(Color.TRANSPARENT);
+            // INITIATIVE 2 BIG PROFILE EXPAND - Keep original background
+            profileButtonContainer.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
         } catch (Exception e) {}
     }
     
@@ -14258,6 +14274,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         
         LinearLayout buttonLayout = (LinearLayout) profileButtonContainer.getChildAt(0);
         buttonLayout.removeAllViews();
+        
+        // REMOVED: expandedProfileButtonContainer references
         
         ArrayList<ProfileActionButton> buttons = new ArrayList<>();
         Context context = getContext();
@@ -14330,6 +14348,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             
             buttonLayout.addView(button, params);
+            
+            // REMOVED: expandedButtonLayout logic
             
             // Set click listener
             button.setOnClickListener(v -> {

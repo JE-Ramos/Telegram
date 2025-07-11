@@ -805,3 +805,122 @@ if (a == 1 && onlineTextView[4] != null) {
 - **Positioning Accuracy**: Uses calculated final expansion coordinates for perfect alignment
 - **Animation Consistency**: Maintains existing expansion animation system
 - **Debug Support**: Visual debug borders for development verification
+
+## ProfileActivity Top Menu Button Hiding System
+
+### Problem: Cluttered Top Menu Bar
+**Issue**: ProfileActivity displayed multiple action buttons (QR Code, Search, Video Call, Voice Call, Edit) in the top menu bar, creating visual clutter and reducing focus on the More button's comprehensive functionality.
+
+### Solution: Comprehensive Button Hiding Implementation
+**Approach**: Systematically hide all top menu buttons except the More button while preserving all functionality through the More button's dropdown menu.
+
+### Implementation Strategy
+
+#### 1. **Button Initialization Hiding** (Lines 3619-3689)
+```java
+// Hide buttons immediately after creation
+qrItem.setVisibility(View.GONE);
+searchItem.setVisibility(View.GONE);
+videoCallItem.setVisibility(View.GONE);
+callItem.setVisibility(View.GONE);
+editItem.setVisibility(View.GONE);
+```
+
+#### 2. **Dynamic Visibility Override** (Lines 7151-7154, 11122-11180)
+```java
+// Override setMediaHeaderVisible() and createActionBarMenu() visibility logic
+if (!mediaHeaderVisible) {
+    // Force all buttons to GONE regardless of visibility flags
+    callItem.setVisibility(View.GONE);
+    videoCallItem.setVisibility(View.GONE);
+    editItem.setVisibility(View.GONE);
+}
+```
+
+#### 3. **QR Button Logic Override** (Lines 7940, 8015, 8054, 11422)
+```java
+// Force updateQrItemVisibility() to always return false
+boolean setQrVisible = false;
+// Original logic commented out to prevent QR button from showing
+```
+
+#### 4. **Search Button Transition Override** (Lines 5892, 11360, 11382, 11427, 11490)
+```java
+// Override all search transitions to always hide search button
+searchItem.setVisibility(View.GONE);
+searchItem.getSearchContainer().setVisibility(View.GONE);
+```
+
+#### 5. **Animation Callback Override** (Lines 7228-7237)
+```java
+// Ensure buttons remain hidden even in animation end callbacks
+if (mediaHeaderVisible) {
+    if (callItemVisible) callItem.setVisibility(View.GONE);
+    if (videoCallItemVisible) videoCallItem.setVisibility(View.GONE);
+    if (editItemVisible) editItem.setVisibility(View.GONE);
+}
+```
+
+#### 6. **Visibility Flag Override** (Lines 10924-10960)
+```java
+// Comment out all visibility flag assignments to prevent re-showing
+// callItemVisible = true;  // Commented out
+// videoCallItemVisible = true;  // Commented out
+// editItemVisible = true;  // Commented out
+```
+
+### Complete Coverage Points
+
+**All Button Types Addressed**:
+- ✅ **QR Code Button**: Hidden via `updateQrItemVisibility()` override and direct visibility control
+- ✅ **Search Button**: Hidden in initialization, transitions, and search container visibility
+- ✅ **Video Call Button**: Hidden in media header logic and createActionBarMenu method
+- ✅ **Voice Call Button**: Hidden in media header logic and createActionBarMenu method  
+- ✅ **Edit Button**: Hidden in media header logic and createActionBarMenu method
+- ✅ **More Button**: Preserved with complete dropdown menu functionality
+
+**All Visibility Trigger Points**:
+- ✅ **Initial Creation**: Buttons hidden immediately after creation
+- ✅ **Scroll Events**: Override scroll-based visibility in `setMediaHeaderVisible()`
+- ✅ **Animation Cycles**: Override animation end callbacks that might re-show buttons
+- ✅ **Search Transitions**: Override search expand/collapse transitions
+- ✅ **Media Header Changes**: Override media header visibility changes
+- ✅ **Flag Assignments**: Comment out visibility flag assignments
+
+### Key Technical Achievements
+
+#### 1. **Comprehensive Coverage**
+- **Multiple Override Points**: Covered all possible visibility trigger points
+- **Robust Implementation**: Handles all scroll positions, profile types, and animation states
+- **Null Safety**: Added null checks to prevent crashes during transitions
+
+#### 2. **Preserved Functionality**
+- **More Button Intact**: All removed button functionality remains accessible
+- **Dropdown Menu**: Complete secondary action menu system preserved
+- **Context Sensitivity**: More menu adapts to profile type (users, bots, channels, groups)
+
+#### 3. **Clean Implementation**
+- **Non-Destructive**: Buttons still initialized but hidden, preventing null pointer exceptions
+- **Maintainable**: Clear comments marking all modifications for future maintenance
+- **Documented**: Comprehensive documentation in ProfileActivity-TopMenu-Logic.md
+
+### Visual Result
+**Before**: Top menu bar showing 5-6 buttons (QR, Search, Video Call, Voice Call, Edit, More)
+**After**: Clean top menu bar showing only More button (three dots)
+
+### Performance Benefits
+- **Reduced UI Clutter**: Cleaner, more focused interface
+- **Consistent Experience**: Same menu behavior across all profile types
+- **Preserved Accessibility**: All functionality remains accessible through More menu
+
+### Error Prevention
+Added comprehensive null checks for `nameTextView[1]` and other UI elements to prevent crashes during the visibility management process:
+```java
+private void updateEmojiStatusEffectPosition() {
+    if (nameTextView[1] != null) {
+        // Safe to proceed with positioning
+    }
+}
+```
+
+This implementation successfully transforms the ProfileActivity from a cluttered multi-button interface to a clean, focused design while maintaining full functionality through the More button's dropdown menu.

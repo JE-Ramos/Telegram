@@ -1128,23 +1128,10 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 y = getPaddingTop() + (textHeight - dh) / 2 + leftDrawableTopPadding;
             }
             leftDrawable.setBounds(x, y, x + dw, y + dh);
-            
-            android.util.Log.d("ProfileDebug", "SimpleTextView draw - Drawing left drawable at x=" + x + ", y=" + y + ", w=" + dw + ", h=" + dh);
-            
-            // PROFILEDEBUG animatedEmoji - Debug background for left drawable (animated emoji/status)
-            if (debugPaint == null) {
-                debugPaint = new Paint();
-                debugPaint.setColor(0x88FF0000); // Semi-transparent red
-                debugPaint.setStyle(Paint.Style.FILL);
-            }
-            canvas.drawRect(x, y, x + dw, y + dh, debugPaint);
+
             
             leftDrawable.draw(canvas);
-        } else {
-            android.util.Log.d("ProfileDebug", "SimpleTextView draw - NOT drawing left drawable");
         }
-        // PROFILEDEBUG - Log right drawable state
-        android.util.Log.d("ProfileDebug", "SimpleTextView draw - rightDrawable=" + (rightDrawable != null ? "present" : "null") + ", rightDrawableOutside=" + rightDrawableOutside);
         
         if (rightDrawable != null && rightDrawableOutside) {
             int x = Math.min(textOffsetX + textWidth + drawablePadding + (scrollingOffset == 0 ? -nextScrollX : (int) -scrollingOffset) + nextScrollX, getMaxTextWidth() - paddingRight + drawablePadding);
@@ -1159,15 +1146,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
             rightDrawable.setBounds(x, y, x + dw, y + dh);
             rightDrawableX = x + (dw >> 1);
             rightDrawableY = y + (dh >> 1);
-            
-            // PROFILEDEBUG animatedEmoji - Debug background for right drawable (animated emoji/status)
-            //DEBUG COLOR
-            if (debugPaint2 == null) {
-                debugPaint2 = new Paint();
-                debugPaint2.setColor(0x8800FF00); // Semi-transparent green
-                debugPaint2.setStyle(Paint.Style.FILL);
-            }
-            canvas.drawRect(x, y, x + dw, y + dh, debugPaint2);
+
             
             rightDrawable.draw(canvas);
         }
