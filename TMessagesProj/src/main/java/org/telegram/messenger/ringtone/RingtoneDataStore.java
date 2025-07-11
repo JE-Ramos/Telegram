@@ -1,4 +1,4 @@
-package org.telegram.messenger.ringtone;
+package je.ramos.telegram.Ringtone;
 
 import android.content.Context;
 import android.content.SharedPreferences;

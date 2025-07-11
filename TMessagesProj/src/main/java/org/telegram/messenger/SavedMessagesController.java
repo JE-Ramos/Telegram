@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
+import je.ramos.telegram.R;
+
 public class SavedMessagesController {
 
     private final int currentAccount;

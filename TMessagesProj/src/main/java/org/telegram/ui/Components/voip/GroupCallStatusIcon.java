@@ -6,7 +6,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.os.SystemClock;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.TLRPC;

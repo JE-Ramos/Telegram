@@ -12,6 +12,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import je.ramos.telegram.R;
+
 public class ShareBroadcastReceiver extends BroadcastReceiver {
 
     @Override

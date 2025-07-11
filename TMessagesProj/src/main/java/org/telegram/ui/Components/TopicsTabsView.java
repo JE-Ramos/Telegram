@@ -43,7 +43,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 import org.telegram.messenger.SavedMessagesController;
 import org.telegram.messenger.TopicsController;
 import org.telegram.messenger.UserConfig;

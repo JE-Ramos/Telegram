@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 
 public class LauncherIconController {
     public static void tryFixLauncherIconIfNeeded() {

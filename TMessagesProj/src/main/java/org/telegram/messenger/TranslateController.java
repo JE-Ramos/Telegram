@@ -65,6 +65,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
+import je.ramos.telegram.R;
+
 public class TranslateController extends BaseController {
 
     public static final String UNKNOWN_LANGUAGE = "und";

@@ -50,6 +50,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import je.ramos.telegram.BuildConfig;
+import je.ramos.telegram.R;
+
 public class SharedConfig {
     /**
      * V2: Ping and check time serialized

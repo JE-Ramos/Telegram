@@ -47,7 +47,9 @@ import androidx.core.graphics.ColorUtils;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
-import org.telegram.messenger.ringtone.RingtoneDataStore;
+
+import je.ramos.telegram.R;
+import je.ramos.telegram.Ringtone.RingtoneDataStore;
 import org.telegram.messenger.utils.tlutils.AmountUtils;
 import org.telegram.messenger.utils.tlutils.TlUtils;
 import org.telegram.tgnet.ConnectionsManager;

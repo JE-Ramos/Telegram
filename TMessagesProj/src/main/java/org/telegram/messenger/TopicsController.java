@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
+import je.ramos.telegram.R;
+
 public class TopicsController extends BaseController {
 
     public static final int TOPIC_FLAG_TITLE = 1;

@@ -16,6 +16,8 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 
+import je.ramos.telegram.R;
+
 public class UserObject {
 
     public static final long REPLY_BOT = 1271266957L;

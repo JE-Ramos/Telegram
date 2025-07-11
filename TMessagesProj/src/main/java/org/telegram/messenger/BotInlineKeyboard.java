@@ -7,6 +7,8 @@ import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 
+import je.ramos.telegram.R;
+
 public class BotInlineKeyboard {
     public static abstract class Button {
         public abstract String getText();

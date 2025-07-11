@@ -21,6 +21,8 @@ import org.telegram.ui.Components.BackupImageView;
 
 import java.util.ArrayList;
 
+import je.ramos.telegram.R;
+
 public class DialogObject {
 
     public static boolean isChannel(TLRPC.Dialog dialog) {

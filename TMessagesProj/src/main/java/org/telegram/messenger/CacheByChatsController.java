@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import je.ramos.telegram.R;
+
 public class CacheByChatsController {
 
     public static int KEEP_MEDIA_DELETE = 4;

@@ -54,6 +54,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import je.ramos.telegram.R;
+
 public class LocaleController {
 
     static final int QUANTITY_OTHER = 0x0000;

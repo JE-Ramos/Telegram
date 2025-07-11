@@ -30,6 +30,8 @@ import org.telegram.ui.EditWidgetActivity;
 import java.io.File;
 import java.util.ArrayList;
 
+import je.ramos.telegram.R;
+
 public class ContactsWidgetService extends RemoteViewsService {
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {

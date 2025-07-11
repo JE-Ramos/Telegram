@@ -48,6 +48,8 @@ import org.telegram.ui.LaunchActivity;
 
 import java.io.File;
 
+import je.ramos.telegram.R;
+
 public class MusicPlayerService extends Service implements NotificationCenter.NotificationCenterDelegate {
 
     public static final String NOTIFY_PREVIOUS = "org.telegram.android.musicplayer.previous";

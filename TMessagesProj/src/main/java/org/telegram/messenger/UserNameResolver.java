@@ -15,6 +15,8 @@ import org.telegram.ui.LaunchActivity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import je.ramos.telegram.R;
+
 public class UserNameResolver {
 
     private final int currentAccount;

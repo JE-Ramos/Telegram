@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import je.ramos.telegram.R;
+
 public class ChannelBoostsController {
 
     private final int currentAccount;

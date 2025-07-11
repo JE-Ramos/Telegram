@@ -12,6 +12,8 @@ import android.widget.RemoteViews;
 
 import org.telegram.ui.LaunchActivity;
 
+import je.ramos.telegram.R;
+
 public class FeedWidgetProvider extends AppWidgetProvider {
 
     @Override

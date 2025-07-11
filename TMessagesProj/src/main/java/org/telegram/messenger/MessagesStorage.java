@@ -69,6 +69,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import je.ramos.telegram.R;
+
 public class MessagesStorage extends BaseController {
 
     private DispatchQueue storageQueue;

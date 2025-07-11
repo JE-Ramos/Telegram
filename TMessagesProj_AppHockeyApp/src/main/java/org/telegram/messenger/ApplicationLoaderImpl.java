@@ -20,7 +20,7 @@ import com.microsoft.appcenter.analytics.EventProperties;
 import com.microsoft.appcenter.crashes.Crashes;
 import com.microsoft.appcenter.distribute.Distribute;
 
-import org.telegram.messenger.regular.BuildConfig;
+import je.ramos.telegram.Regular.BuildConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.UpdateAppAlertDialog;

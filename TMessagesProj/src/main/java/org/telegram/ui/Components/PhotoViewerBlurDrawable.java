@@ -8,7 +8,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.PhotoViewer;
 

@@ -157,7 +157,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace 'org.telegram.messenger.huawei'
+    namespace 'je.ramos.telegram.huawei'
 
     lintOptions {
         checkReleaseBuilds false

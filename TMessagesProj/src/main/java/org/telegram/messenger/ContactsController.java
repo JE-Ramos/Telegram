@@ -51,6 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import je.ramos.telegram.R;
+
 public class ContactsController extends BaseController {
 
     private Account systemAccount;

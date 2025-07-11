@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 import org.telegram.tgnet.tl.TL_stars;
 
 import java.math.BigDecimal;

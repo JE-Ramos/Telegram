@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
+import je.ramos.telegram.R;
+
 @Keep
 public class PushListenerController {
     public static final int PUSH_TYPE_FIREBASE = 2,

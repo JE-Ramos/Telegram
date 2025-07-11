@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.Theme;
 

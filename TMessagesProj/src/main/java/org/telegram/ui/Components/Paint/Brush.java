@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.R;
+import je.ramos.telegram.R;
 
 import java.util.Arrays;
 import java.util.List;

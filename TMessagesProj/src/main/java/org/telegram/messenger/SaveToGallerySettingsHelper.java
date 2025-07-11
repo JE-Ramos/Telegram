@@ -8,6 +8,8 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.util.LongSparseArray;
 
+import je.ramos.telegram.R;
+
 public class SaveToGallerySettingsHelper {
 
     //shared settings

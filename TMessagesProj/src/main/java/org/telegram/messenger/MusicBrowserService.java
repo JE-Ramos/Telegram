@@ -53,6 +53,8 @@ import java.util.Locale;
 
 import javax.annotation.Nullable;
 
+import je.ramos.telegram.R;
+
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class MusicBrowserService extends MediaBrowserService implements NotificationCenter.NotificationCenterDelegate {
 
