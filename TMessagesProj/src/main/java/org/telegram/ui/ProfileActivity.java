@@ -9929,7 +9929,22 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             setCollectibleGiftStatus(user.emoji_status instanceof TLRPC.TL_emojiStatusCollectible ? (TLRPC.TL_emojiStatusCollectible) user.emoji_status : null);
 
             final ImageLocation imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_BIG);
-            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL);
+            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL); // thumbLocation == null means text avatar, != null means image avatar
+            android.util.Log.d("AvatarDebug", "AVATAR TYPE DETECTION: thumbLocation = " + (thumbLocation == null ? "NULL (text avatar)" : "NOT NULL (image avatar)"));
+            
+            // Resize and reposition avatar container for text-only avatars
+            if (thumbLocation == null) {
+                // Text avatar - use different size and position
+                int textAvatarSize = AndroidUtilities.dp(64); // Larger size for text avatars
+
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+                params.width = params.height = textAvatarSize;
+
+                params.leftMargin = textAvatarSize;
+                params.topMargin = AndroidUtilities.dp(-32);
+                avatarContainer.setLayoutParams(params);
+                android.util.Log.d("AvatarDebug", "TEXT AVATAR: Resized to " + textAvatarSize + "px, removed left margin");
+            }
             final ImageLocation videoThumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_VIDEO_BIG);
             VectorAvatarThumbDrawable vectorAvatarThumbDrawable = null;
             TLRPC.VideoSize vectorAvatar = null;
