@@ -639,41 +639,74 @@ With stable text centering achieved, the focus shifts to:
 
 ## ProfileActivity OnlineTextView Centering
 
-### Problem: OnlineTextView Appeared Far Left
-**Issue**: Even after changing layout to use `Gravity.CENTER_HORIZONTAL`, the onlineTextView still appeared far to the left of the name.
+Fixed onlineTextView appearing far left despite `CENTER_HORIZONTAL` layout by:
+1. **Text Gravity**: Changed from `Gravity.LEFT` to `Gravity.CENTER` (line 5254)
+2. **Layout**: `Gravity.CENTER_HORIZONTAL | Gravity.TOP` with 0 left margin, 52dp top (line 5264)
+3. **Animation**: Set all `onlineX` translations to 0 (lines 7603, 7765, 7887)
 
-**Root Causes**:
-1. **Internal text gravity** was set to `Gravity.LEFT` instead of `CENTER`
-2. **Animation translations** were applying horizontal offsets during avatar expansion
+**Result**: "last seen" text now centers perfectly under user name with stable positioning.
 
-### Complete Solution
+## ProfileActivity Avatar Size Discrepancy Investigation
 
-**1. Layout Update (ProfileActivity.java:5264)**:
-```java
-avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(
-    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 
-    Gravity.CENTER_HORIZONTAL | Gravity.TOP, 
-    0, 52, 0, 0  // 0 left margin, 52dp top margin
-));
-```
+**Discovery**: Letter avatars and photo avatars have different container sizes, causing `CENTER_HORIZONTAL` to position them differently.
 
-**2. Text Gravity Fix (ProfileActivity.java:5254)**:
-```java
-onlineTextView[a].setGravity(Gravity.CENTER);  // Was: Gravity.LEFT
-```
+**Debug Logs Show**:
+- Letter avatar: `avatarContainer.getX(): 653px`
+- Photo avatar: `avatarContainer.getX(): 552px`  
+- **101px difference** between positions
 
-**3. Animation Translation Removal**:
-All `onlineX` calculations that applied horizontal offsets were set to 0:
+**Root Cause Found**: 
+- **Multiple size modification points**: Lines 5886-5887 and 7744-7745 both modify `avatarContainer` size dynamically
+- **Different size calculations**: Line 5886 uses `listView.getMeasuredWidth() / avatarScale` vs line 7744 uses `(extraHeight + newTop) / avatarScale`
+- **Animation path differences**: Letter vs photo avatars may trigger different animation code paths
+- **CENTER_HORIZONTAL dependency**: Android's gravity centering calculates position based on container width, so different sizes = different positions
 
-- **Line 7603**: Changed from `AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft()` to `0`
-- **Line 7765**: Changed from `-21 * AndroidUtilities.density * diff` to `0`
-- **Line 7887**: Changed from `AndroidUtilities.dp(-47f) + ...` to `AndroidUtilities.dp(0f) + ...`
+**Technical Details**:
+- Line 5886: `params.width = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(42f), listView.getMeasuredWidth() / avatarScale, value);`
+- Line 7744: `params.width = params.height = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(42f), (extraHeight + newTop) / avatarScale, avatarAnimationProgress);`
+- Container size affects `CENTER_HORIZONTAL` calculations, causing 101px position difference
 
-### Result
-- ✅ **Perfect centering**: "last seen" text now centers perfectly under the name
-- ✅ **Consistent behavior**: Works for all profile types (users, bots, channels)
-- ✅ **Smooth animations**: Avatar expansion animations maintain centered positioning
-- ✅ **No fluctuation**: Position remains stable across open/close cycles
+**Status**: Enhanced debug logging added to track dynamic size changes during avatar animations.
 
-### Technical Achievement
-The solution combines framework-based centering (`Gravity.CENTER_HORIZONTAL`) with consistent animation calculations (zero horizontal translation) to achieve perfect alignment between nameTextView and onlineTextView.
+## ProfileActivity Background View Hierarchy and Color Sources
+
+### Background Color Sources Identified
+
+**Initial State (Light Blue Background)**:
+- **Source**: `profileButtonContainer` using `Theme.key_avatar_backgroundActionBarBlue`
+- **Location**: ProfileActivity.java:14037
+- **Code**: `profileButtonContainer.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));`
+
+**Expanded/Collapsed State (Green Background)**:
+- **Source**: `topView` during avatar expansion animation
+- **Location**: ProfileActivity.java:7651
+- **Code**: `topView.setBackgroundColor(Color.GREEN);`
+- **Trigger**: Animation end during avatar expansion/collapse
+
+### View Hierarchy Analysis
+
+**FrameLayout Stacking Order** (bottom to top):
+1. **topView** - Background color layer (added first at line 4887)
+2. **avatarContainer2** - Full-screen container with avatar/name/status (added at line 4982)
+3. **profileButtonContainer** - Profile action buttons area (added at line 5391)
+
+**Key Findings**:
+- **topView**: Provides animated background colors during different states
+- **avatarContainer2**: Transparent container that covers full screen area
+- **profileButtonContainer**: Provides the persistent light blue background for button area
+
+### Background Color Behavior
+
+**Multiple topView Color Settings**:
+- **Initial**: `Color.MAGENTA` (ProfileActivity.java:4887)
+- **Pinch-to-zoom**: `Color.RED` (ProfileActivity.java:5541)
+- **Animation end**: `Color.GREEN` (ProfileActivity.java:7651)
+- **State change**: `Color.BLUE` (ProfileActivity.java:8743)
+
+**Profile Button Container**:
+- **Persistent**: `Theme.key_avatar_backgroundActionBarBlue` (light blue in light mode)
+- **Always visible**: Provides consistent background for action buttons
+
+### Technical Insight
+
+The light blue background visible in the initial state comes from the **profileButtonContainer**, not the topView. The topView provides different colored backgrounds during various animation states (green when expanding/collapsing), but the profileButtonContainer maintains the consistent light blue background for the profile action buttons area.
