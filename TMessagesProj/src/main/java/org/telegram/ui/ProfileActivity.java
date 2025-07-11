@@ -5245,7 +5245,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (a == 3) {
                 // Action bar version positioned in action bar area
                 // Position: centered in action bar height area (about 56dp from top)
-                avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 20, 0, 0));
+                // nameTextView[3] position
+                avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0, 0, 0));
             } else {
                 avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 44, 0, 0));
             }
@@ -5259,18 +5260,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         customRightDrawableContainer = new FrameLayout(context);
         customRightDrawableContainer.setClipChildren(false);
         customRightDrawableContainer.setClipToPadding(false);
+        customRightDrawableContainer.setBackgroundColor(0x44FF0000); // Debug: Red background with alpha
         avatarContainer2.addView(customRightDrawableContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        Log.d("ProfileDebug", "Created customRightDrawableContainer with MATCH_PARENT dimensions");
         
         // Create individual overlay views for each drawable type
         customRightDrawableView = new ImageView(context);
         customRightDrawableView.setScaleType(ImageView.ScaleType.CENTER);
         customRightDrawableView.setVisibility(View.GONE);
+        customRightDrawableView.setBackgroundColor(0x4400FF00); // Debug: Green background with alpha
         customRightDrawableContainer.addView(customRightDrawableView, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 16, 0));
+        Log.d("ProfileDebug", "Created customRightDrawableView at position RIGHT|TOP with margins (0,44,16,0)");
         
         customRightDrawable2View = new ImageView(context);
         customRightDrawable2View.setScaleType(ImageView.ScaleType.CENTER);
         customRightDrawable2View.setVisibility(View.GONE);
+        customRightDrawable2View.setBackgroundColor(0x440000FF); // Debug: Blue background with alpha
         customRightDrawableContainer.addView(customRightDrawable2View, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 40, 0));
+        Log.d("ProfileDebug", "Created customRightDrawable2View at position RIGHT|TOP with margins (0,44,40,0)");
         
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
@@ -5352,7 +5359,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (a == 5) {
                 // Action bar version positioned in action bar area
                 // Position: centered below nameTextView[3] in action bar
-                avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 40, 0, 0));
+                avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0, 0, 0));
             } else {
                 avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 52, 0, 0));
             }
@@ -5443,7 +5450,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         buttonLayout.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
         profileButtonContainer.addView(buttonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         
-        frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 400, Gravity.TOP, 0, 0, 0, 0));
+        frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
         
         // Populate profile action buttons
         updateProfileActionButtons();
@@ -7988,6 +7995,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         updateEmojiStatusEffectPosition();
+        
+        // PROFILEDEBUG - Update custom drawables after layout changes
+        updateCustomRightDrawables();
     }
 
     public void updateQrItemVisibility(boolean animated) {
@@ -10061,6 +10071,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     // PROFILEDEBUG - Custom drawable overlay system methods
     private void updateCustomRightDrawables() {
         if (customRightDrawableContainer == null || nameTextView[1] == null) {
+            Log.d("ProfileDebug", "updateCustomRightDrawables - SKIP: container or nameTextView[1] is null");
             return;
         }
         
@@ -10068,24 +10079,40 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         Drawable rightDrawable = nameTextView[1].getRightDrawable();
         Drawable rightDrawable2 = nameTextView[1].getRightDrawable2();
         
+        Log.d("ProfileDebug", "updateCustomRightDrawables - rightDrawable=" + (rightDrawable != null ? rightDrawable.getClass().getSimpleName() : "null") + 
+                               ", rightDrawable2=" + (rightDrawable2 != null ? rightDrawable2.getClass().getSimpleName() : "null"));
+        
         // Update custom overlay views
         if (rightDrawable != null) {
-            customRightDrawableView.setImageDrawable(rightDrawable);
+            // Clone the drawable to prevent issues with shared state
+            Drawable clonedDrawable = rightDrawable.getConstantState() != null ? rightDrawable.getConstantState().newDrawable().mutate() : rightDrawable;
+            customRightDrawableView.setImageDrawable(clonedDrawable);
             customRightDrawableView.setVisibility(View.VISIBLE);
+            Log.d("ProfileDebug", "updateCustomRightDrawables - Set rightDrawable, visibility=VISIBLE");
         } else {
             customRightDrawableView.setVisibility(View.GONE);
+            Log.d("ProfileDebug", "updateCustomRightDrawables - No rightDrawable, visibility=GONE");
         }
         
         if (rightDrawable2 != null) {
-            customRightDrawable2View.setImageDrawable(rightDrawable2);
+            // Clone the drawable to prevent issues with shared state
+            Drawable clonedDrawable2 = rightDrawable2.getConstantState() != null ? rightDrawable2.getConstantState().newDrawable().mutate() : rightDrawable2;
+            customRightDrawable2View.setImageDrawable(clonedDrawable2);
             customRightDrawable2View.setVisibility(View.VISIBLE);
+            Log.d("ProfileDebug", "updateCustomRightDrawables - Set rightDrawable2, visibility=VISIBLE");
         } else {
             customRightDrawable2View.setVisibility(View.GONE);
+            Log.d("ProfileDebug", "updateCustomRightDrawables - No rightDrawable2, visibility=GONE");
         }
+        
+        // Make sure the container is visible
+        customRightDrawableContainer.setVisibility(View.VISIBLE);
         
         // Hide the original drawables in nameTextView to prevent conflicts
         nameTextView[1].setRightDrawable(null);
         nameTextView[1].setRightDrawable2(null);
+        
+        Log.d("ProfileDebug", "updateCustomRightDrawables - Cleared original drawables from nameTextView[1]");
     }
 
     private MessagesController.PeerColor peerColor;
@@ -10441,6 +10468,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     });
                 }
             }
+            
+            // PROFILEDEBUG - Update custom drawables after user profile loop
+            updateCustomRightDrawables();
 
             if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
                 onlineTextView[2].setText(LocaleController.getString(R.string.FallbackTooltip));
@@ -10606,6 +10636,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (nameTextView[a].setRightDrawable2(titleTextView.getRightDrawable2())) {
                         changed = true;
                     }
+                    // PROFILEDEBUG - Update custom drawables after copying from chat activity
+                    if (a == 1) {
+                        updateCustomRightDrawables();
+                    }
                 } else if (isTopic) {
                     CharSequence title = topic == null ? "" : topic.title;
                     try {
@@ -10664,6 +10698,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             });
                         }
                     }
+                    // PROFILEDEBUG - Update custom drawables for chat profiles (layer 1)
+                    updateCustomRightDrawables();
                 } else if (!copyFromChatActivity) {
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
@@ -10680,6 +10716,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         nameTextView[a].setRightDrawable(null);
                     }
+                    // PROFILEDEBUG - Update custom drawables for chat profiles (layer 1)
+                    updateCustomRightDrawables();
                 }
                 if (chat.bot_verification_icon != 0) {
                     Log.d("ProfileDebug", "CHAT PROFILE: Setting leftDrawableOutside=TRUE for bot verification, chatId=" + chat.id);
@@ -10731,6 +10769,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
+            
+            // PROFILEDEBUG - Update custom drawables after chat profile loop
+            updateCustomRightDrawables();
+            
             if (changed) {
                 needLayout(true);
             }
