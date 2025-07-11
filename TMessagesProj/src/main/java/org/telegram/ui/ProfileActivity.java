@@ -9939,11 +9939,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
                 params.width = params.height = textAvatarSize;
+                // INITIATIVE 4: profile picture as text centering
+                params.leftMargin = AndroidUtilities.dp(0);
+                android.util.Log.d("AvatarDebug", "TEXT AVATAR: Resized to " + params.leftMargin + "left margin");
+                params.topMargin = -AndroidUtilities.dp(32);
 
-                params.leftMargin = textAvatarSize;
-                params.topMargin = AndroidUtilities.dp(-32);
                 avatarContainer.setLayoutParams(params);
-                android.util.Log.d("AvatarDebug", "TEXT AVATAR: Resized to " + textAvatarSize + "px, removed left margin");
             }
             final ImageLocation videoThumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_VIDEO_BIG);
             VectorAvatarThumbDrawable vectorAvatarThumbDrawable = null;
