@@ -710,3 +710,98 @@ Fixed onlineTextView appearing far left despite `CENTER_HORIZONTAL` layout by:
 ### Technical Insight
 
 The light blue background visible in the initial state comes from the **profileButtonContainer**, not the topView. The topView provides different colored backgrounds during various animation states (green when expanding/collapsing), but the profileButtonContainer maintains the consistent light blue background for the profile action buttons area.
+
+## ProfileActivity Left-Aligned Text Views for Expanded State
+
+### Problem: Centered Text Not Suitable for Expanded Avatar
+**Issue**: When the avatar expands, the centered nameTextView[1] and onlineTextView[1] remain centered, but the design requires left-aligned text positioning during expansion.
+
+### Solution: Dual Text View System
+**Implementation**: Created additional left-aligned text views that appear only during avatar expansion:
+
+#### New Text Views Added:
+- **nameTextView[2]**: Left-aligned version of name text for expanded state
+- **onlineTextView[4]**: Left-aligned version of online status for expanded state
+
+#### Array Size Expansion:
+```java
+// Expanded from [2] to [3] to accommodate nameTextView[2]
+private SimpleTextView[] nameTextView = new SimpleTextView[3];
+
+// Expanded from [4] to [5] to accommodate onlineTextView[4]  
+private SimpleTextView[] onlineTextView = new SimpleTextView[5];
+```
+
+#### Left-Aligned View Configuration:
+```java
+// nameTextView[2] - Left-aligned name text
+nameTextView[2].setGravity(Gravity.LEFT);
+nameTextView[2].setBackgroundColor(0x4400FFFF); // Cyan debug border
+nameTextView[2].setAlpha(0.0f); // Hidden initially
+
+// onlineTextView[4] - Left-aligned online status  
+onlineTextView[4].setGravity(Gravity.LEFT);
+onlineTextView[4].setBackgroundColor(0x44FF00FF); // Pink debug border
+onlineTextView[4].setAlpha(0.0f); // Hidden initially
+```
+
+#### Final Position Positioning:
+**Key Insight**: Position the left-aligned views at the exact final destination coordinates where the centered views end up after expansion animation completes.
+
+```java
+// nameTextView[2] positioned at nameTextView[1] final expansion coordinates
+// Final position: X = 18dp, Y = bottom - 38dp (matches nameTextViewXEnd/YEnd)
+avatarContainer2.addView(nameTextView[2], LayoutHelper.createFrame(
+    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 
+    Gravity.LEFT | Gravity.BOTTOM, 18, 0, 0, 38
+));
+
+// onlineTextView[4] positioned at onlineTextView[1] final expansion coordinates  
+avatarContainer2.addView(onlineTextView[4], LayoutHelper.createFrame(
+    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 
+    Gravity.LEFT | Gravity.TOP, 16, 52, 0, 0
+));
+```
+
+#### Show/Hide Logic During Expansion:
+```java
+// Control visibility based on expansion progress
+if (expandProgress > 0.5f) {
+    // Show left-aligned views when significantly expanded
+    nameTextView[2].setAlpha(expandProgress);
+    nameTextView[1].setAlpha(1f - expandProgress);
+    onlineTextView[4].setAlpha(expandProgress);
+    onlineTextView[1].setAlpha(1f - expandProgress);
+} else {
+    // Hide left-aligned views when collapsed
+    nameTextView[2].setAlpha(0f);
+    nameTextView[1].setAlpha(1f);
+    onlineTextView[4].setAlpha(0f);
+    onlineTextView[1].setAlpha(1f);
+}
+```
+
+#### Text Content Synchronization:
+```java
+// Copy text content from centered views to left-aligned views
+if (a == 1 && nameTextView[2] != null) {
+    nameTextView[2].setText(nameTextView[a].getText());
+}
+if (a == 1 && onlineTextView[4] != null) {
+    onlineTextView[4].setText(onlineTextView[a].getText());
+}
+```
+
+### Results Achieved:
+- ✅ **Collapsed State**: Centered text views (nameTextView[1], onlineTextView[1]) are visible
+- ✅ **Expanded State**: Left-aligned text views (nameTextView[2], onlineTextView[4]) fade in
+- ✅ **Smooth Transition**: Alpha crossfade between centered and left-aligned versions
+- ✅ **Perfect Positioning**: Left-aligned views positioned at exact final coordinates of centered views
+- ✅ **Debug Visibility**: Cyan border for name text, pink border for online status
+- ✅ **Content Sync**: Left-aligned views automatically get same text content as centered views
+
+### Technical Benefits:
+- **Clean Architecture**: No modification to existing centered text logic
+- **Positioning Accuracy**: Uses calculated final expansion coordinates for perfect alignment
+- **Animation Consistency**: Maintains existing expansion animation system
+- **Debug Support**: Visual debug borders for development verification

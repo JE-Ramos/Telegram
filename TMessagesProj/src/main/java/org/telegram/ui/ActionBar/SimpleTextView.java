@@ -1161,6 +1161,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
             rightDrawableY = y + (dh >> 1);
             
             // PROFILEDEBUG animatedEmoji - Debug background for right drawable (animated emoji/status)
+            //DEBUG COLOR
             if (debugPaint2 == null) {
                 debugPaint2 = new Paint();
                 debugPaint2.setColor(0x8800FF00); // Semi-transparent green
@@ -1189,6 +1190,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
             rightDrawable2.setBounds(x, y, x + dw, y + dh);
             
             // PROFILEDEBUG verifyBadge - Debug background for right drawable 2 (verification badge)
+            //DEBUG COLOR
             if (debugPaint3 == null) {
                 debugPaint3 = new Paint();
                 debugPaint3.setColor(0x880000FF); // Semi-transparent blue

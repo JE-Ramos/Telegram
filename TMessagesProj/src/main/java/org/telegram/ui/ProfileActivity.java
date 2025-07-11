@@ -332,10 +332,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private LinearLayoutManager layoutManager;
     private ListAdapter listAdapter;
     private SearchAdapter searchAdapter;
-    private SimpleTextView[] nameTextView = new SimpleTextView[3]; // Added [2] for left-aligned expanded state
+    private SimpleTextView[] nameTextView = new SimpleTextView[4]; // Added [2] for left-aligned expanded state, [3] for action bar collapsed state
     private String nameTextViewRightDrawableContentDescription = null;
     private String nameTextViewRightDrawable2ContentDescription = null;
-    private SimpleTextView[] onlineTextView = new SimpleTextView[5]; // Added [4] for left-aligned expanded state
+    private SimpleTextView[] onlineTextView = new SimpleTextView[6]; // Added [4] for left-aligned expanded state, [5] for action bar collapsed state
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
     private RLottieImageView writeButton;
     private AnimatorSet writeButtonAnimation;
@@ -408,6 +408,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private boolean fragmentViewAttached;
 
     private boolean doNotSetForeground;
+    
+    // PROFILEDEBUG - Custom drawable overlay system fields
+    private FrameLayout customRightDrawableContainer;
+    private ImageView customRightDrawableView;
+    private ImageView customRightDrawable2View;
 
     private boolean[] isOnline = new boolean[1];
 
@@ -1032,7 +1037,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            // INITIATIVE 2 BIG PROFILE EXPAND - Make topView taller to be more visible
             setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(widthMeasureSpec) + AndroidUtilities.dp(200));
         }
 
@@ -3615,6 +3619,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (ContactsController.getInstance(currentAccount).getPrivacyRules(PRIVACY_RULES_TYPE_ADDED_BY_PHONE) == null) {
                 ContactsController.getInstance(currentAccount).loadPrivacySettings();
             }
+            // Hide QR button - keeping only More button functionality
+            qrItem.setVisibility(View.GONE);
         }
         if (imageUpdater != null && !myProfile) {
             searchItem = menu.addItem(search_button, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
@@ -3648,10 +3654,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (expandPhoto) {
                 searchItem.setVisibility(View.GONE);
             }
+            // Hide Search button - keeping only More button functionality
+            searchItem.setVisibility(View.GONE);
         }
 
         videoCallItem = menu.addItem(video_call_item, R.drawable.profile_video);
         videoCallItem.setContentDescription(LocaleController.getString(R.string.VideoCall));
+        // Hide Video Call button - keeping only More button functionality
+        videoCallItem.setVisibility(View.GONE);
         if (chatId != 0) {
             callItem = menu.addItem(call_item, R.drawable.msg_voicechat2);
             if (ChatObject.isChannelOrGiga(currentChat)) {
@@ -3663,6 +3673,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             callItem = menu.addItem(call_item, R.drawable.ic_call);
             callItem.setContentDescription(LocaleController.getString(R.string.Call));
         }
+        // Hide Voice Call button - keeping only More button functionality
+        callItem.setVisibility(View.GONE);
         if (myProfile) {
             editItem = menu.addItem(edit_profile, R.drawable.group_edit_profile);
             editItem.setContentDescription(LocaleController.getString(R.string.Edit));
@@ -3670,6 +3682,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             editItem = menu.addItem(edit_channel, R.drawable.group_edit_profile);
             editItem.setContentDescription(LocaleController.getString(R.string.Edit));
         }
+        // Hide Edit button - keeping only More button functionality
+        editItem.setVisibility(View.GONE);
         otherItem = menu.addItem(10, R.drawable.ic_ab_other, resourcesProvider);
         ttlIconView = new ImageView(context);
         ttlIconView.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_actionBarDefaultIcon), PorterDuff.Mode.MULTIPLY));
@@ -4884,9 +4898,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         topView = new TopView(context);
         topView.setBackgroundColorId(peerColor, false);
-        // INITIATIVE 2 BIG PROFILE EXPAND - Set pink background for topView visibility
-        topView.setBackgroundColor(Color.MAGENTA);
-        frameLayout.addView(topView);
+        topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
+        // PROFILEDEBUG - Add topView with explicit layout parameters to ensure it's positioned correctly
+        frameLayout.addView(topView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         contentView.blurBehindViews.add(topView);
 
         animatedStatusView = new DrawerProfileCell.AnimatedStatusView(context, 20, 60);
@@ -5182,6 +5196,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (a == 2) {
                 // Left-aligned version for expanded state
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_profile_title));
+            } else if (a == 3) {
+                // Action bar version for collapsed state
+                nameTextView[a].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
             } else {
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
             }
@@ -5189,6 +5206,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setTextSize(18);
             if (a == 2) {
                 nameTextView[a].setGravity(Gravity.LEFT); // PROFILEDEBUG - Left-aligned for expanded state
+            } else if (a == 3) {
+                nameTextView[a].setGravity(Gravity.CENTER); // PROFILEDEBUG - Center text for action bar
             } else {
                 nameTextView[a].setGravity(Gravity.CENTER); // PROFILEDEBUG - Center text within TextView to match container centering
             }
@@ -5196,7 +5215,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setLeftDrawableTopPadding(-AndroidUtilities.dp(1.3f));
             nameTextView[a].setPivotX(0);
             nameTextView[a].setPivotY(0);
-            nameTextView[a].setAlpha(a == 0 || a == 2 ? 0.0f : 1.0f); // Hide left-aligned version initially
+            nameTextView[a].setAlpha(a == 0 || a == 2 ? 0.0f : 1.0f); // Hide left-aligned version initially, show action bar for testing
             if (a == 1) {
                 nameTextView[a].setScrollNonFitText(true);
                 nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -5206,6 +5225,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
                 // PROFILEDEBUG - Add cyan debug border
                 nameTextView[a].setBackgroundColor(0x4400FFFF); // Cyan with alpha
+            } else if (a == 3) {
+                // Action bar version configuration
+                nameTextView[a].setScrollNonFitText(true);
+                nameTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                // PROFILEDEBUG - Add yellow debug border
+                nameTextView[a].setBackgroundColor(0x44FFFF00); // Yellow with alpha
             }
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
@@ -5217,10 +5242,36 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 // Left-aligned version positioned at nameTextView[2] final expansion position
                 // Final position: X = 18dp, Y = bottom - 38dp (matches nameTextViewXEnd/YEnd calculation)
                 avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 38, 230, 0, 0));
+            } else if (a == 3) {
+                // Action bar version positioned in action bar area
+                // Position: centered in action bar height area (about 56dp from top)
+                avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 20, 0, 0));
             } else {
                 avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 44, 0, 0));
             }
         }
+        
+        // PROFILEDEBUG - Custom drawable overlay system for ProfileActivity
+        // This system creates dedicated overlay views for right drawables that are always positioned on the right
+        // without touching the core SimpleTextView logic used by other screens
+        
+        // Create overlay containers for right drawables
+        customRightDrawableContainer = new FrameLayout(context);
+        customRightDrawableContainer.setClipChildren(false);
+        customRightDrawableContainer.setClipToPadding(false);
+        avatarContainer2.addView(customRightDrawableContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
+        // Create individual overlay views for each drawable type
+        customRightDrawableView = new ImageView(context);
+        customRightDrawableView.setScaleType(ImageView.ScaleType.CENTER);
+        customRightDrawableView.setVisibility(View.GONE);
+        customRightDrawableContainer.addView(customRightDrawableView, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 16, 0));
+        
+        customRightDrawable2View = new ImageView(context);
+        customRightDrawable2View.setScaleType(ImageView.ScaleType.CENTER);
+        customRightDrawable2View.setVisibility(View.GONE);
+        customRightDrawableContainer.addView(customRightDrawable2View, LayoutHelper.createFrame(24, 24, Gravity.RIGHT | Gravity.TOP, 0, 44, 40, 0));
+        
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
                 onlineTextView[a] = new LinkSpanDrawable.ClickableSmallTextView(context) {
@@ -5260,6 +5311,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             if (onlineTextView[4] != null) {
                                 onlineTextView[4].setTextColor(color);
                             }
+                            if (onlineTextView[5] != null) {
+                                onlineTextView[5].setTextColor(color);
+                            }
                         }
                         if (showStatusButton != null) {
                             showStatusButton.setTextColor(Theme.multAlpha(Theme.adaptHSV(color, -.02f, +.15f), 1.4f));
@@ -5278,7 +5332,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else {
                 onlineTextView[a].setGravity(Gravity.CENTER);
             }
-            onlineTextView[a].setAlpha(a == 0 || a == 4 ? 0.0f : 1.0f); // Hide left-aligned version initially
+            onlineTextView[a].setAlpha(a == 0 || a == 4 ? 0.0f : 1.0f); // Hide left-aligned version initially, show action bar for testing
             if (a == 1 || a == 2 || a == 3) {
                 onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
             } else if (a == 4) {
@@ -5295,6 +5349,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (a == 4) {
                 // Left-aligned version positioned at left edge
                 avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 16, 52, 0, 0));
+            } else if (a == 5) {
+                // Action bar version positioned in action bar area
+                // Position: centered below nameTextView[3] in action bar
+                avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 40, 0, 0));
             } else {
                 avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 52, 0, 0));
             }
@@ -5385,7 +5443,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         buttonLayout.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
         profileButtonContainer.addView(buttonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         
-        frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 76, Gravity.TOP, 0, 0, 0, 0));
+        frameLayout.addView(profileButtonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 400, Gravity.TOP, 0, 0, 0, 0));
         
         // Populate profile action buttons
         updateProfileActionButtons();
@@ -5822,7 +5880,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (searchItem != null) {
             searchItem.setAlpha(1.0f - value);
             searchItem.setScaleY(1.0f - value);
-            searchItem.setVisibility(View.VISIBLE);
+            // Always hide search button - keeping only More button functionality
+            searchItem.setVisibility(View.GONE);
             searchItem.setClickable(searchItem.getAlpha() > .5f);
             if (qrItem != null) {
                 float translation = AndroidUtilities.dp(48) * value;
@@ -7081,6 +7140,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         ImageView mediaOptionsItem = sharedMediaLayout.getSearchOptionsItem();
         TextView saveItem = sharedMediaLayout.getSaveItem();
         if (!mediaHeaderVisible) {
+            // Always hide all buttons - keeping only More button functionality
+            callItem.setVisibility(View.GONE);
+            videoCallItem.setVisibility(View.GONE);
+            editItem.setVisibility(View.GONE);
+            /*
             if (callItemVisible) {
                 callItem.setVisibility(View.VISIBLE);
             }
@@ -7090,6 +7154,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (editItemVisible) {
                 editItem.setVisibility(View.VISIBLE);
             }
+            */
             otherItem.setVisibility(View.VISIBLE);
             if (mediaOptionsItem != null) {
                 mediaOptionsItem.setVisibility(View.GONE);
@@ -7411,6 +7476,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             // Profile button container visible for all profile types when expanded
             boolean profileButtonContainerVisible = diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
+            
+            // Action bar text views visible when collapsed
+            boolean actionBarTextVisible = diff <= 0.2f && !searchMode;
 
             if (writeButton != null) {
                 writeButton.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset - AndroidUtilities.dp(29.5f));
@@ -7419,6 +7487,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (profileButtonContainer != null) {
                 // Position profileButtonContainer above write button area
                 float containerY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset;
+                
+                // DEBUG: Log positioning values
+                android.util.Log.d("ProfileDebug", "ProfileButtonContainer positioning: containerY=" + containerY + 
+                    ", actionBarHeight=" + ActionBar.getCurrentActionBarHeight() + 
+                    ", extraHeight=" + extraHeight);
                 
                 // Calculate squeeze animation based on distance to action bar
                 float actionBarBottom = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
@@ -7430,8 +7503,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 float normalHeight = AndroidUtilities.dp(76);
                 float minHeight = AndroidUtilities.dp(10);
                 
-                // Calculate squeeze progress (0.0 = normal, 1.0 = fully squeezed)
-                float squeezeProgress = Math.max(0, Math.min(1, (maxDistance - distanceToActionBar) / maxDistance));
+                // Only apply squeeze when avatar is being collapsed (extraHeight is small)
+                float squeezeProgress = 0;
+                if (extraHeight <= AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP)) {
+                    // Calculate squeeze progress (0.0 = normal, 1.0 = fully squeezed)
+                    squeezeProgress = Math.max(0, Math.min(1, (maxDistance - distanceToActionBar) / maxDistance));
+                }
+                
+                // DEBUG: Log squeeze values
+                android.util.Log.d("ProfileDebug", "Squeeze calculation: distanceToActionBar=" + distanceToActionBar + 
+                    ", maxDistance=" + maxDistance + ", squeezeProgress=" + squeezeProgress + ", extraHeight=" + extraHeight);
                 
                 // Create squeeze effect - scale height smaller as it approaches action bar
                 float scaleY = AndroidUtilities.lerp(1.0f, 0.13f, squeezeProgress); // 0.13 ≈ 10dp/76dp
@@ -7591,6 +7672,33 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         onlineTextView[1].setAlpha(1f);
                     }
                 }
+                
+                // PROFILEDEBUG - Show/hide action bar views when collapsed
+                // TEMPORARILY DISABLED FOR TESTING - action bar views always visible
+                /*
+                if (actionBarTextVisible) {
+                    // Show action bar views when collapsed
+                    if (nameTextView[3] != null) {
+                        nameTextView[3].setAlpha(1f);
+                        nameTextView[1].setAlpha(0f);
+                    }
+                    if (onlineTextView[5] != null) {
+                        onlineTextView[5].setAlpha(1f);
+                        onlineTextView[1].setAlpha(0f);
+                    }
+                } else {
+                    // Hide action bar views when expanded
+                    if (nameTextView[3] != null) {
+                        nameTextView[3].setAlpha(0f);
+                        nameTextView[1].setAlpha(1f);
+                    }
+                    if (onlineTextView[5] != null) {
+                        onlineTextView[5].setAlpha(0f);
+                        onlineTextView[1].setAlpha(1f);
+                    }
+                }
+                */
+                
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -7886,7 +7994,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (qrItem == null) {
             return;
         }
-        boolean setQrVisible = isQrNeedVisible() && Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP)) > .5f && searchTransitionProgress > .5f;
+        // Always hide QR button - keeping only More button functionality
+        boolean setQrVisible = false;
+        // boolean setQrVisible = isQrNeedVisible() && Math.min(1f, extraHeight / AndroidUtilities.dp(PROFILE_HEADER_COLLAPSED_HEIGHT_DP)) > .5f && searchTransitionProgress > .5f;
         if (animated) {
             if (setQrVisible != isQrItemVisible) {
                 isQrItemVisible = setQrVisible;
@@ -7896,9 +8006,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 qrItem.setClickable(isQrItemVisible);
                 qrItemAnimation = new AnimatorSet();
+                // Always hide QR button - keeping only More button functionality
+                qrItem.setVisibility(View.GONE);
+                /*
                 if (!(qrItem.getVisibility() == View.GONE && !setQrVisible)) {
                     qrItem.setVisibility(View.VISIBLE);
                 }
+                */
                 if (setQrVisible) {
                     qrItemAnimation.setInterpolator(new DecelerateInterpolator());
                     qrItemAnimation.playTogether(
@@ -7931,7 +8045,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             isQrItemVisible = setQrVisible;
             qrItem.setClickable(isQrItemVisible);
             qrItem.setAlpha(setQrVisible ? 1.0f : 0.0f);
-            qrItem.setVisibility(setQrVisible ? View.VISIBLE : View.GONE);
+            // Always hide QR button - keeping only More button functionality
+            qrItem.setVisibility(View.GONE);
         }
     }
 
@@ -9933,12 +10048,44 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateEmojiStatusEffectPosition() {
-        animatedStatusView.setScaleX(nameTextView[1].getScaleX());
-        animatedStatusView.setScaleY(nameTextView[1].getScaleY());
-        animatedStatusView.translate(
-            nameTextView[1].getX() + nameTextView[1].getRightDrawableX() * nameTextView[1].getScaleX(),
-            nameTextView[1].getY() + (nameTextView[1].getHeight() - (nameTextView[1].getHeight() - nameTextView[1].getRightDrawableY()) * nameTextView[1].getScaleY())
-        );
+        if (nameTextView != null && nameTextView.length > 1 && nameTextView[1] != null && animatedStatusView != null) {
+            animatedStatusView.setScaleX(nameTextView[1].getScaleX());
+            animatedStatusView.setScaleY(nameTextView[1].getScaleY());
+            animatedStatusView.translate(
+                nameTextView[1].getX() + nameTextView[1].getRightDrawableX() * nameTextView[1].getScaleX(),
+                nameTextView[1].getY() + (nameTextView[1].getHeight() - (nameTextView[1].getHeight() - nameTextView[1].getRightDrawableY()) * nameTextView[1].getScaleY())
+            );
+        }
+    }
+
+    // PROFILEDEBUG - Custom drawable overlay system methods
+    private void updateCustomRightDrawables() {
+        if (customRightDrawableContainer == null || nameTextView[1] == null) {
+            return;
+        }
+        
+        // Copy the current drawables from nameTextView[1] to our custom overlay views
+        Drawable rightDrawable = nameTextView[1].getRightDrawable();
+        Drawable rightDrawable2 = nameTextView[1].getRightDrawable2();
+        
+        // Update custom overlay views
+        if (rightDrawable != null) {
+            customRightDrawableView.setImageDrawable(rightDrawable);
+            customRightDrawableView.setVisibility(View.VISIBLE);
+        } else {
+            customRightDrawableView.setVisibility(View.GONE);
+        }
+        
+        if (rightDrawable2 != null) {
+            customRightDrawable2View.setImageDrawable(rightDrawable2);
+            customRightDrawable2View.setVisibility(View.VISIBLE);
+        } else {
+            customRightDrawable2View.setVisibility(View.GONE);
+        }
+        
+        // Hide the original drawables in nameTextView to prevent conflicts
+        nameTextView[1].setRightDrawable(null);
+        nameTextView[1].setRightDrawable2(null);
     }
 
     private MessagesController.PeerColor peerColor;
@@ -10128,6 +10275,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (a == 1 && nameTextView[2] != null) {
                     nameTextView[2].setText(nameTextView[a].getText());
                 }
+                // PROFILEDEBUG - Copy text to action bar view for collapsed state
+                if (a == 1 && nameTextView[3] != null) {
+                    nameTextView[3].setText(nameTextView[a].getText());
+                }
                 if (a == 0 && onlineTextOverride != null) {
                     onlineTextView[a].setText(onlineTextOverride);
                 } else if (a == 0 && copyFromChatActivity) {
@@ -10206,6 +10357,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         nameTextView[a].setRightDrawable(null);
                     }
+                    // PROFILEDEBUG - Update custom drawable overlay after setting right drawables for layer 1
+                    updateCustomRightDrawables();
                 }
                 if (leftIcon == null && currentEncryptedChat == null && user.bot_verification_icon != 0) {
                     // PROFILEDEBUG - Bot verification case, let framework handle centering
@@ -10762,6 +10915,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         otherItem.removeAllSubItems();
         animatingItem = null;
 
+        // Always keep buttons hidden - keeping only More button functionality
         editItemVisible = false;
         callItemVisible = false;
         videoCallItemVisible = false;
@@ -10792,10 +10946,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     editItemVisible = true;
                 }
 
+                // Always keep call buttons hidden - keeping only More button functionality
+                /*
                 if (userInfo != null && userInfo.phone_calls_available) {
                     callItemVisible = true;
                     videoCallItemVisible = Build.VERSION.SDK_INT >= 18 && userInfo.video_calls_available;
                 }
+                */
                 if (isBot || getContactsController().contactsDict.get(userId) == null) {
                     if (MessagesController.isSupportUser(user)) {
                         if (userBlocked) {
@@ -10961,6 +11118,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             otherItem.hideSubItem(delete_avatar);
         }
         if (!mediaHeaderVisible) {
+            // Hide callItem - keeping only More button functionality
+            if (callItem.getVisibility() != View.GONE) {
+                callItem.setVisibility(View.GONE);
+            }
+            /*
             if (callItemVisible) {
                 if (callItem.getVisibility() != View.VISIBLE) {
                     callItem.setVisibility(View.VISIBLE);
@@ -10974,6 +11136,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     callItem.setVisibility(View.GONE);
                 }
             }
+            */
+            // Hide videoCallItem - keeping only More button functionality
+            if (videoCallItem.getVisibility() != View.GONE) {
+                videoCallItem.setVisibility(View.GONE);
+            }
+            /*
             if (videoCallItemVisible) {
                 if (videoCallItem.getVisibility() != View.VISIBLE) {
                     videoCallItem.setVisibility(View.VISIBLE);
@@ -10987,6 +11155,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     videoCallItem.setVisibility(View.GONE);
                 }
             }
+            */
             if (editItemVisible) {
                 if (editItem.getVisibility() != View.VISIBLE) {
                     editItem.setVisibility(View.VISIBLE);
@@ -11186,7 +11355,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         float offset = extraHeight;
         searchListView.setTranslationY(offset);
         searchListView.setVisibility(View.VISIBLE);
-        searchItem.setVisibility(View.VISIBLE);
+        // Always hide search button - keeping only More button functionality
+        searchItem.setVisibility(View.GONE);
 
         listView.setVisibility(View.VISIBLE);
 
@@ -11207,7 +11377,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
         searchItem.setVisibility(itemVisibility);
 
-        searchItem.getSearchContainer().setVisibility(searchTransitionProgress > 0.5f ? View.GONE : View.VISIBLE);
+        // Always hide search container - keeping only More button functionality
+        searchItem.getSearchContainer().setVisibility(View.GONE);
         searchListView.setEmptyView(emptyView);
         avatarContainer.setClickable(false);
 
@@ -11252,7 +11423,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 searchItem.requestFocusOnSearchView();
             }
 
-            searchItem.getSearchContainer().setVisibility(searchTransitionProgress < 0.5f ? View.VISIBLE : View.GONE);
+            // Always hide search container - keeping only More button functionality\n            searchItem.getSearchContainer().setVisibility(View.GONE);
             int visibility = searchTransitionProgress > 0.5f ? View.VISIBLE : View.GONE;
             if (otherItem != null) {
                 otherItem.setVisibility(visibility);
@@ -11315,7 +11486,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         int hide = enter ? View.GONE : View.VISIBLE;
         listView.setVisibility(hide);
         searchListView.setVisibility(enter ? View.VISIBLE : View.GONE);
-        searchItem.getSearchContainer().setVisibility(enter ? View.VISIBLE : View.GONE);
+        // Always hide search container - keeping only More button functionality\n        searchItem.getSearchContainer().setVisibility(View.GONE);
 
         actionBar.onSearchFieldVisibilityChanged(enter);
 
@@ -11333,9 +11504,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
         if (qrItem != null) {
             qrItem.setAlpha(1f);
-            qrItem.setVisibility(enter || !isQrNeedVisible() ? View.GONE : View.VISIBLE);
+            // Always hide QR button - keeping only More button functionality
+            qrItem.setVisibility(View.GONE);
         }
-        searchItem.setVisibility(hide);
+        // Always hide search button - keeping only More button functionality
+        searchItem.setVisibility(View.GONE);
 
         avatarContainer.setAlpha(1f);
         if (storyView != null) {
@@ -14033,8 +14206,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void updateProfileButtonContainerBackground() {
         if (profileButtonContainer == null) return;
         try {
-            // INITIATIVE 2 BIG PROFILE EXPAND - Use same background color as topView
-            profileButtonContainer.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
+            // INITIATIVE 2 BIG PROFILE EXPAND - Remove background, topView will provide it
+            profileButtonContainer.setBackgroundColor(Color.TRANSPARENT);
         } catch (Exception e) {}
     }
     
